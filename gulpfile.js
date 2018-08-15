@@ -45,6 +45,7 @@ gulp.task('compile:typescript', function () {
       emitError: false,
       "lib": ["es2016"],
       "target": "es6",
+      "sourceMap": true,
   }))
   .pipe(gulp.dest(paths.tscripts.dest));
 });

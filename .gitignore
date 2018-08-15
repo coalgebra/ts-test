@@ -3,6 +3,4 @@ node_modules/*
 .idea/*
 *.xml
 .nyc_output
-app/build/ast.js
-app/build/tokenize.js
-app/build/utils.js
+app/build/*

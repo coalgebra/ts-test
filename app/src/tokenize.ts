@@ -46,7 +46,7 @@ export class Token {
     }
 }
 
-export function tokenize(code: string, filename: string): Token[] {
+export function tokenize(code: string, filename?: string): Token[] {
     let position = new CodePosition(0, 0, 0, filename);
     let tokens: Token[] = [];
     let comment_counter: number = 0;
@@ -102,7 +102,7 @@ export function tokenize(code: string, filename: string): Token[] {
 
     while (position.fine()) {
         skipSpaces();
-        const begin: CodePosition = position;
+        const begin: CodePosition = new CodePosition(position.line, position.column, position.offset, filename);
         const head = cur();
         step();
 
