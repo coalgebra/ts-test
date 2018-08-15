@@ -4,3 +4,4 @@ node_modules/*
 .idea/*
 .idea/workspace.xml
 *.xml
+.nyc_output
