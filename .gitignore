@@ -1,3 +1,6 @@
 node_modules/*
 .editorconfig
 .jshintrc
+.idea/*
+.idea/workspace.xml
+*.xml
