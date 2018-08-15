@@ -25,6 +25,14 @@ export class CodePosition {
     }
 }
 
+function createPos(line: number, column: number, offset: number, filename: string) {
+    let pos: CodePosition = new CodePosition(0, 0, 0, filename);
+    pos.line = line;
+    pos.column = column;
+    pos.offset = offset;
+    pos.filename = filename;
+    return pos;
+}
 export enum Parentheses {
     LEFT,
     SLEFT,
@@ -32,17 +40,29 @@ export enum Parentheses {
     SRIGHT
 }
 
+export enum TokenType {
+    IDENTIFIER,
+    PARENTHESE,
+    CHAR_LITERAL,
+    NUMBER_LITERAL,
+    BOOLEAN_LITERAL,
+    STRING_LITERAL, // TODO
+    QUOTE, // TODO
+}
+
 export class Token {
     begin: CodePosition;
     end: CodePosition;
-    content: string;
+    content: string; // store the corresponding code
+    token_type: TokenType;
     value: string | boolean | Parentheses;
 
-    constructor(begin: CodePosition, end: CodePosition, content: string, value: string | boolean | Parentheses) {
+    constructor(begin: CodePosition, end: CodePosition, content: string, token_type: TokenType, value: string | boolean | Parentheses) {
         this.begin = begin;
         this.end = end;
         this.content = content;
         this.value = value;
+        this.token_type = token_type;
     }
 }
 
@@ -86,16 +106,16 @@ export function tokenize(code: string, filename?: string): Token[] {
     function getParenthese(head, begin: CodePosition) {
         switch (head) {
             case "[":
-                comment_counter || tokens.push(new Token(begin, begin, head, Parentheses.SLEFT));
+                comment_counter || tokens.push(new Token(begin, begin, head, TokenType.PARENTHESE, Parentheses.SLEFT));
                 break;
             case "]":
-                comment_counter || tokens.push(new Token(begin, begin, head, Parentheses.SRIGHT));
+                comment_counter || tokens.push(new Token(begin, begin, head, TokenType.PARENTHESE, Parentheses.SRIGHT));
                 break;
             case "(":
-                comment_counter || tokens.push(new Token(begin, begin, head, Parentheses.LEFT));
+                comment_counter || tokens.push(new Token(begin, begin, head, TokenType.PARENTHESE, Parentheses.LEFT));
                 break;
             case ")":
-                comment_counter || tokens.push(new Token(begin, begin, head, Parentheses.RIGHT));
+                comment_counter || tokens.push(new Token(begin, begin, head, TokenType.PARENTHESE, Parentheses.RIGHT));
                 break;
         }
     }
@@ -106,21 +126,26 @@ export function tokenize(code: string, filename?: string): Token[] {
         const head = cur();
         step();
 
+        if (head.length === 0) {
+            break;
+        }
+
         if (head === "#") { // boolean literals
             const second = cur();
             step();
             switch (second) {
                 case "t": // true literal : #t
-                    comment_counter || tokens.push(new Token(begin, position, "#t", true));
+                    comment_counter || tokens.push(new Token(begin, position, "#t", TokenType.BOOLEAN_LITERAL, true));
                     break;
                 case "f": // false literal : #f
-                    comment_counter || tokens.push(new Token(begin, position, "#f", false));
+                    comment_counter || tokens.push(new Token(begin, position, "#f", TokenType.BOOLEAN_LITERAL, false));
                     break;
                 case "|": // block comment head : #| COMMENT |#
                     comment_counter++;
                     break;
                 case "\\": // char literal : #\@ #\*
-                    // TODO
+                    const third = cur(); step();
+                    comment_counter || tokens.push(new Token(begin, position, `${head}${second}${third}`, TokenType.CHAR_LITERAL, third));
                     break;
                 default:
                     throw `Expected ${second} after '#' at ${position.toString()}`;
@@ -146,16 +171,16 @@ export function tokenize(code: string, filename?: string): Token[] {
         }
 
         if (head === ";") { // inline comment
-            while (cur() !== "\n") step();
+            while (position.fine() && cur() !== "\n") step();
             continue;
         }
 
         if ("0123456789.-".includes(head)) { // number
-            while (position.fine() && !isSpace(cur())) step();
+            while (position.fine() && !isSpace(cur()) && !("[()]".includes(cur()))) step();
             let num = code.substr(begin.offset, position.offset - begin.offset);
             if (comment_counter) continue;
             if (parseInt(num).toString() === num) { // is number
-                tokens.push(new Token(begin, position, num, parseInt(num)));
+                tokens.push(new Token(begin, position, num, TokenType.NUMBER_LITERAL, parseInt(num)));
             } else {
                 throw `Unexpected token ${num} at ${begin.toString()}`;
             }
@@ -163,10 +188,10 @@ export function tokenize(code: string, filename?: string): Token[] {
         }
 
         // identifier
-        while (position.fine() && !isSpace(cur())) step();
+        while (position.fine() && !isSpace(cur()) && !("[()]".includes(cur()))) step();
         if (comment_counter) continue;
         let id = code.substr(begin.offset, position.offset - begin.offset);
-        tokens.push(new Token(begin, position, id, id));
+        tokens.push(new Token(begin, position, id, TokenType.IDENTIFIER, id));
     }
 
     return tokens;
