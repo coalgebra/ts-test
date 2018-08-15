@@ -1,7 +1,8 @@
 node_modules/*
 .editorconfig
-.jshintrc
 .idea/*
-.idea/workspace.xml
 *.xml
 .nyc_output
+app/build/ast.js
+app/build/tokenize.js
+app/build/utils.js
