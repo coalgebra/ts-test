@@ -1,7 +1,6 @@
 {
   "rules": {
     "class-name": true,
-    "curly": true,
     "eofline": false,
     "forin": true,
     "indent": [true, "spaces"],
@@ -17,6 +16,7 @@
         "timeEnd",
         "trace"
     ],
+      "triple-equals": true,
     "no-construct": true,
     "no-debugger": true, 
     "no-switch-case-fall-through": true,

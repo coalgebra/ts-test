@@ -5,8 +5,11 @@ var runseq = require('run-sequence');
 var tslint = require('gulp-tslint');
 
 var paths = {
-  tscripts : { src : ['app/src/**/*.ts'],
-        dest : 'app/build' }
+    tscripts: {
+        src: ['app/src/**/*.ts'],
+        dest: 'app/build',
+
+    }
 };
 
 gulp.task('default', ['lint', 'buildrun']);
@@ -39,7 +42,9 @@ gulp.task('compile:typescript', function () {
   .src(paths.tscripts.src)
   .pipe(tsc({
     module: "commonjs",
-    emitError: false
+      emitError: false,
+      "lib": ["es2016"],
+      "target": "es6",
   }))
   .pipe(gulp.dest(paths.tscripts.dest));
 });

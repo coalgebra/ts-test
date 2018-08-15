@@ -13,7 +13,8 @@
     "gulp-tslint": "^2.0.0",
     "mocha": "*",
     "nyc": "^12.0.2",
-    "run-sequence": "^1.1.1"
+      "run-sequence": "^1.1.1",
+      "@types/node": "^10.5.1"
   },
   "scripts": {
     "main": "gulp buildrun",
