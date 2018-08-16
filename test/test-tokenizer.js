@@ -1,5 +1,7 @@
 /* global describe, it, beforeEach */
 'use strict';
+const isSpace = require("../app/build/tokenize").isSpace;
+
 const assert = require('assert');
 const tokenizer = require('../app/build/tokenize');
 
@@ -48,6 +50,19 @@ describe("Simple tests for tokenizer", () => {
             assert.strictEqual(
                 tokenizer.tokenize(a).map(x => x.content).join(""),
                 tokenizer.tokenize(b).map(x => x.content).join("")
+            );
+        });
+    });
+    it('should parse bracket correctly', function () {
+        const codes = [
+            `(let [(a 1)
+                   (b 2)]
+                   (begin (+ 1 2))`,
+        ];
+        codes.map(code => {
+            assert.strictEqual(
+                code.split("").filter(x => !isSpace(x)).join(""),
+                tokenizer.tokenize(code).map(x => x.content).join("")
             );
         });
     });

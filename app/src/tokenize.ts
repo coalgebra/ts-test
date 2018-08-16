@@ -25,14 +25,6 @@ export class CodePosition {
     }
 }
 
-function createPos(line: number, column: number, offset: number, filename: string) {
-    let pos: CodePosition = new CodePosition(0, 0, 0, filename);
-    pos.line = line;
-    pos.column = column;
-    pos.offset = offset;
-    pos.filename = filename;
-    return pos;
-}
 export enum Parentheses {
     LEFT,
     SLEFT,
