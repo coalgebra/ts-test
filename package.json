@@ -16,6 +16,7 @@
     "mocha": "*",
     "tslint": "*",
     "nyc": "^12.0.2",
+    "typescript": "^3.0.0",
     "run-sequence": "^1.1.1"
   },
   "scripts": {
