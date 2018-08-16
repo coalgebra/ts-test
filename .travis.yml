@@ -2,8 +2,8 @@ language: node_js
 node_js:
     - "10"
 before_script:
-    - npm install -g typescript mocha istanbul tslint
-    - npm install
+#    - npm install -g typescript mocha istanbul tslint
+#    - npm install
 script:
     - npm run test
     - npm run cov
