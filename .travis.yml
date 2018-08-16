@@ -5,5 +5,5 @@ before_script:
     - npm install -g typescript mocha istanbul tslint
     - npm install
 script:
-    - npm run rest
+    - npm run test
     - npm run cov
