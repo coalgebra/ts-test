@@ -16,6 +16,10 @@ export class CodePosition {
         this.filename = filename;
     }
 
+    public static getNull(): CodePosition {
+        return new CodePosition(-1, -1, 0, null);
+    }
+
     fine(): boolean {
         return this.column >= 0 && this.line >= 0;
     }
@@ -33,13 +37,13 @@ export enum Parentheses {
 }
 
 export enum TokenType {
-    IDENTIFIER,
-    PARENTHESE,
-    CHAR_LITERAL,
-    INTEGER_LITERAL,
-    BOOLEAN_LITERAL,
-    STRING_LITERAL, // TODO
-    QUOTE, // TODO
+    IDENTIFIER = 1,
+    PARENTHESE = 2,
+    CHAR_LITERAL = 3,
+    INTEGER_LITERAL = 4,
+    BOOLEAN_LITERAL = 5,
+    STRING_LITERAL = 6, // TODO
+    QUOTE = 7, // TODO
 }
 
 export class Token {
@@ -68,7 +72,6 @@ export class Token {
             return this.token_type === condition;
         }
     }
-
 }
 
 export function tokenize(code: string, filename?: string): Token[] {

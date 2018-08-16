@@ -1,6 +1,18 @@
-import {Token, TokenType} from "./tokenize";
-import {AST, Define, Lambda} from "./ast";
+import {CodePosition, Token, TokenType} from "./tokenize";
+import {
+    AST,
+    Begin,
+    BooleanLiteral,
+    CharLiteral, CondStmt,
+    Define,
+    Identifer,
+    IfStmt,
+    IntegerLiteral,
+    Lambda,
+    Literal
+} from "./ast";
 import {isKeyword, isPrimitive} from "./constants";
+import * as assert from "assert";
 
 export function parse(tokens: Token[]): AST {
     if (tokens.length === 0) { // no tokens
@@ -10,18 +22,25 @@ export function parse(tokens: Token[]): AST {
 
     let pos = 0; // mark the current position
 
+    function empty(): boolean {
+        return pos >= tokens.length;
+    }
+
     function cur(): Token {
         if (pos < tokens.length) return tokens[pos];
+        // return new Token(CodePosition.getNull(), CodePosition.getNull(), "", -1, "");
         return null;
     }
 
-    function match(condition ?: string | TokenType): void {
-        if (pos >= tokens.length) return;
-        if (condition === null
+    function match(condition ?: string | TokenType): Token {
+        if (pos >= tokens.length) {
+            throw `No more tokens availble`;
+        }
+        if (condition === undefined
             || typeof condition === "string" && cur().content === condition
             || cur().token_type === condition) {
             pos++;
-            return;
+            return tokens[pos - 1];
         }
         throw `Expected token ${condition}, got ${cur().content} at ${cur().begin}`;
     }
@@ -32,9 +51,9 @@ export function parse(tokens: Token[]): AST {
         return res;
     }
 
-    function parseDefine(): Define {
-        // "(" "define"
-        const id = cur();
+    function parseDefine(begin: CodePosition): Define {
+        match("define");
+        const id = shift();
         if (id.token_type !== TokenType.IDENTIFIER) {
             throw `Expected token ID, got ${id.content} at ${id.begin.toString()}`;
         }
@@ -43,41 +62,125 @@ export function parse(tokens: Token[]): AST {
             throw `Should not redefine primitive ${name} at ${id.begin.toString()}`;
         }
         const body = parseAST();
-        return null;
+        const end = match(")").end;
+        return new Define(begin, end, name, body);
     }
 
-    function parseLambda(): Lambda {
-        // TODO
-        return null;
+    function parseLambda(begin: CodePosition): Lambda {
+        match("lambda");
+        // parsing parameter
+        match("(");
+        let parameters: string[] = [];
+        while (!cur().is(")")) {
+            assert(cur().token_type === TokenType.IDENTIFIER);
+            parameters.push(shift().value as string);
+        }
+        match(")");
+
+        // parsing body
+
+        const body = parseAST();
+        const end = match(")").end;
+        return new Lambda(begin, end, parameters, body);
+    }
+
+    function parseQuote(begin: CodePosition): Literal { // this part maybe very dirty
+         return null; // TODO
     }
 
     function parseAST(): AST {
+        if (!cur()) return null;
+        if (cur().is("(")) { // is a s-expression
+            return parseSExpression();
+        } else if (cur().is("'")) { // its is a quote
+            const begin = match().begin;
+            return parseQuote(begin);
+        } else {
+            switch (cur().token_type) {
+                case TokenType.BOOLEAN_LITERAL:
+                    return new BooleanLiteral(shift());
+                case TokenType.CHAR_LITERAL:
+                    return new CharLiteral(shift());
+                case TokenType.IDENTIFIER:
+                    return new Identifer(shift());
+                case TokenType.INTEGER_LITERAL:
+                    return new IntegerLiteral(shift());
+                case TokenType.STRING_LITERAL:
+                    // TODO : should not come here
+                    throw `should not come here`;
+            }
+        }
+    }
+
+    function parseIf(begin: CodePosition): IfStmt {
+        match("if");
+        // parsing cond
+        const cond = parseAST();
+        const pass = parseAST();
+        const fail = parseAST();
+        const end = match(")").end;
+        return new IfStmt(begin, end, cond, pass, fail);
+    }
+
+    function parseCond(begin: CodePosition): CondStmt {
+        match("cond");
         // TODO
-        return null;
+        return undefined;
+    }
+
+    function parseBegin(begin: CodePosition): Begin {
+        match("begin");
+        let stmts: AST[] = [];
+        while (!cur().is(")")) {
+            stmts.push(parseAST());
+        }
+        const end = match(")").end;
+        return new Begin(begin, end, stmts);
     }
 
     function parseSExpression(): AST {
-        // assert tokens[0] === "("
-        const begin = tokens[pos].content;
-        if (isKeyword(begin)) {
-            switch (begin) {
+        // matched "("
+        const begin = shift("(").begin;
+        const head = cur().content;
+        let res: AST = null;
+        if (isKeyword(head)) {
+            switch (head) {
                 case "define":
+                    res = parseDefine(begin);
+                    break;
                 case "lambda":
+                    res = parseLambda(begin);
+                    break;
                 case "if":
+                    res = parseIf(begin);
+                    break;
                 case "cond":
+                    res = parseCond(begin);
+                    break;
                 case "begin":
+                    res = parseBegin(begin);
+                    break;
+                case "quote":
+                    match("quote");
+                    res = parseQuote(begin);
+                    break;
                 default:
+                    throw `Unsupported keyword ${head}`;
             }
+        } else { // function application
+            // TODO
         }
-        return null; // FIXME
+        res.end = match(")").end;
+        return res; // FIXME
     }
 
-    // check the first token
-    const begin = tokens[0];
+    let asts: AST[] = [];
 
-    if (begin.is("(")) { // it starts a new s-expression
-        return parseSExpression();
+    while (cur()) { // there still tokens
+        asts.push(parseAST());
     }
 
-    return null; // FIXME
+    return asts.length <= 1 ?
+            asts[0] :
+            new Begin(tokens[0].begin, tokens[tokens.length - 1].end, asts);
 }

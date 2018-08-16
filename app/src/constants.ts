@@ -8,6 +8,7 @@ export const keywords = [
     "letrec",
     "else",
     "begin",
+    "quote"
 ];
 
 export const primitives = [

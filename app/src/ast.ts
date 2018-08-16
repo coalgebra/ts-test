@@ -1,4 +1,4 @@
-import {Context, ValueType} from "./utils";
+import {ValueType} from "./utils";
 import {CodePosition, Token, TokenType} from "./tokenize";
 import * as assert from "assert";
 
@@ -10,6 +10,14 @@ export abstract class AST {
     protected constructor(begin: CodePosition, end: CodePosition) {
         this.begin = begin;
         this.end = end;
+    }
+}
+
+export class Begin extends AST {
+    stmts: AST[];
+    constructor(begin: CodePosition, end: CodePosition, stmts: AST[]) {
+        super(begin, end);
+        this.stmts = stmts;
     }
 }
 
@@ -49,9 +57,9 @@ export class Application extends AST {
 export class Identifer extends AST {
     name: string;
 
-    constructor(begin: CodePosition, end: CodePosition, name: string) {
-        super(begin, end);
-        this.name = name;
+    constructor(token: Token) {
+        super(token.begin, token.end);
+        this.name = token.value as string;
     }
 }
 
@@ -84,6 +92,15 @@ export class BooleanLiteral extends Literal {
     }
 }
 
+export class CharLiteral extends Literal {
+    value: string;
+    constructor(token: Token) {
+        super(token.begin, token.end, ValueType.CHARACTER);
+        assert(token.token_type === TokenType.CHAR_LITERAL);
+        this.value = token.value as string;
+    }
+}
+
 export class NilLiteral extends Literal {
     constructor(begin: CodePosition, end: CodePosition) {
         super(begin, end, ValueType.NIL);
@@ -98,6 +115,27 @@ export class PairLiteral extends Literal {
         super(begin, end, ValueType.PAIR);
         this.car = car;
         this.cdr = cdr;
+    }
+}
+
+export class IfStmt extends AST {
+    cond: AST;
+    pass: AST;
+    fail: AST;
+
+    constructor(begin: CodePosition, end: CodePosition, cond: AST, pass: AST, fail: AST) {
+        super(begin, end);
+        this.cond = cond;
+        this.pass = pass;
+        this.fail = fail;
+    }
+}
+
+export class CondStmt extends AST {
+    cases: [AST, AST][];
+    constructor(begin: CodePosition, end: CodePosition, cases: [AST, AST][]) {
+        super(begin, end);
+        this.cases = cases;
     }
 }
 

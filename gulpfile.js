@@ -8,7 +8,7 @@ var paths = {
     tscripts: {
         src: ['app/src/**/*.ts'],
         dest: 'app/build',
-
+        lib: ["es5", "es6", "es7", "es2016"],
     }
 };
 
@@ -43,9 +43,11 @@ gulp.task('compile:typescript', function () {
   .pipe(tsc({
     module: "commonjs",
       emitError: false,
-      "lib": ["es2016"],
-      "target": "es6",
+      "lib": ["es5", "es6", "es7", "es2016"],
+      "target": "es2018",
       "sourceMap": true,
+      "allowJs": true,
+      "strict": true,
   }))
   .pipe(gulp.dest(paths.tscripts.dest));
 });
