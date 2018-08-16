@@ -20,6 +20,6 @@
   "scripts": {
     "main": "gulp buildrun",
     "test": "gulp build && mocha",
-    "cov": "gulp build && mocha && istanbul cover node_modules/mocha/bin/_mocha"
+    "cov": "istanbul cover --report lcov node_modules/mocha/bin/_mocha -- -R spec test/*.js"
   }
 }
