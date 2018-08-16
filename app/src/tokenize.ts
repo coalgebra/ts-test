@@ -36,7 +36,7 @@ export enum TokenType {
     IDENTIFIER,
     PARENTHESE,
     CHAR_LITERAL,
-    NUMBER_LITERAL,
+    INTEGER_LITERAL,
     BOOLEAN_LITERAL,
     STRING_LITERAL, // TODO
     QUOTE, // TODO
@@ -56,6 +56,19 @@ export class Token {
         this.value = value;
         this.token_type = token_type;
     }
+
+    is(condition: string | TokenType | number | Parentheses): boolean {
+        if (typeof condition === "string") {
+            return this.content === condition;
+        } else if (typeof condition === "number") {
+            return this.token_type === TokenType.INTEGER_LITERAL && this.value as number === condition;
+        } else if (condition in Parentheses) {
+            return this.value as Parentheses === condition;
+        } else {
+            return this.token_type === condition;
+        }
+    }
+
 }
 
 export function tokenize(code: string, filename?: string): Token[] {
@@ -167,12 +180,17 @@ export function tokenize(code: string, filename?: string): Token[] {
             continue;
         }
 
+        if (head === "'") { // quote
+            comment_counter || tokens.push(new Token(begin, begin, head, TokenType.QUOTE, head));
+            continue;
+        }
+
         if ("0123456789.-".includes(head)) { // number
             while (position.fine() && !isSpace(cur()) && !("[()]".includes(cur()))) step();
             let num = code.substr(begin.offset, position.offset - begin.offset);
             if (comment_counter) continue;
             if (parseInt(num).toString() === num) { // is number
-                tokens.push(new Token(begin, position, num, TokenType.NUMBER_LITERAL, parseInt(num)));
+                tokens.push(new Token(begin, position, num, TokenType.INTEGER_LITERAL, parseInt(num)));
             } else {
                 throw `Unexpected token ${num} at ${begin.toString()}`;
             }

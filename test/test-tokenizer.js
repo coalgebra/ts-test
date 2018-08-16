@@ -5,34 +5,43 @@ const isSpace = require("../app/build/tokenize").isSpace;
 const assert = require('assert');
 const tokenizer = require('../app/build/tokenize');
 
+function selfCheck(cases) {
+    cases.map(code => {
+        assert.strictEqual(
+            code.split("").filter(x => !isSpace(x)).join(""),
+            tokenizer.tokenize(code).map(x => x.content).join("")
+        );
+    });
+}
+
+function pairCheck(cases) {
+    cases.map(pair => {
+        const [a, b] = pair;
+        assert.strictEqual(
+            tokenizer.tokenize(a).map(x => x.content).join(""),
+            tokenizer.tokenize(b).map(x => x.content).join("")
+        );
+    });
+}
+
 describe("Simple tests for tokenizer", () => {
     it('should work for parentheses and identifiers', function () {
-        const codes = [
+        const cases = [
             `(( ) a() b(c(( )d)d))`,
-            `(define a->b (lambda (a) (lambda (b) b)))`,
+            `(define ab->b (lambda (a) (lambda (b) b)))`,
         ];
-        codes.map(code => {
-            assert.strictEqual(
-                code.split("").filter(x => x !== " ").join(""),
-                tokenizer.tokenize(code).map(x => x.content).join("")
-            );
-        });
+        selfCheck(cases);
     });
     it('should work for boolean , character , and number literals', function () {
-        const codes = [
+        const cases = [
             `(define true #t)`,
             `(define false #f)`,
             `(display #\\@)`
         ];
-        codes.map(code => {
-            assert.strictEqual(
-                code.split("").filter(x => x !== " ").join(""),
-                tokenizer.tokenize(code).map(x => x.content).join("")
-            );
-        });
+        selfCheck(cases);
     });
     it('should work for inline and block comments', function () {
-        const tests = [
+        const cases = [
             [
                 `(define a 1); blah blah`,
                 `(define a 1)`
@@ -45,13 +54,7 @@ describe("Simple tests for tokenizer", () => {
                     a b)`,
                 `(define a b)`]
         ];
-        tests.map(pair => {
-            const [a, b] = pair;
-            assert.strictEqual(
-                tokenizer.tokenize(a).map(x => x.content).join(""),
-                tokenizer.tokenize(b).map(x => x.content).join("")
-            );
-        });
+        pairCheck(cases);
     });
     it('should parse bracket correctly', function () {
         const codes = [
@@ -59,11 +62,12 @@ describe("Simple tests for tokenizer", () => {
                    (b 2)]
                    (begin (+ 1 2))`,
         ];
-        codes.map(code => {
-            assert.strictEqual(
-                code.split("").filter(x => !isSpace(x)).join(""),
-                tokenizer.tokenize(code).map(x => x.content).join("")
-            );
-        });
+        selfCheck(codes);
+    });
+    it('should parse quote correctly', function () {
+        const codes = [
+            `(display '(1 2 3 ('())))`
+        ];
+        selfCheck(codes);
     });
 });

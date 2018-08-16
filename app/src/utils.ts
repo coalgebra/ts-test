@@ -1,5 +1,14 @@
 export class Context {
+    // TODO
+}
 
+export enum ValueType {
+    FUNCTION,
+    BOOLEAN,
+    INTEGER,
+    CHARACTER, // TODO
+    PAIR,
+    NIL, // ()
 }
 
 export class CommandLineArguments {
@@ -7,5 +16,5 @@ export class CommandLineArguments {
     curry_flag: boolean;
     fold_flag: boolean;
     output_file: string;
-
+    // TODO
 }
