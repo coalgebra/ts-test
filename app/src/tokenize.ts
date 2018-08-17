@@ -16,10 +16,6 @@ export class CodePosition {
         this.filename = filename;
     }
 
-    public static getNull(): CodePosition {
-        return new CodePosition(-1, -1, 0, null);
-    }
-
     fine(): boolean {
         return this.column >= 0 && this.line >= 0;
     }

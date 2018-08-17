@@ -1,22 +1,23 @@
 import {CodePosition, Token, TokenType} from "./tokenize";
 import {
+    Application,
     AST,
     Begin,
     BooleanLiteral,
-    CharLiteral, CondStmt,
+    CharLiteral,
+    CondStmt,
     Define,
     Identifer,
     IfStmt,
     IntegerLiteral,
     Lambda,
-    Literal
+    Literal, NilLiteral
 } from "./ast";
 import {isKeyword, isPrimitive} from "./constants";
 import * as assert from "assert";
 
 export function parse(tokens: Token[]): AST {
     if (tokens.length === 0) { // no tokens
-        // FIXME: this should never happen
         return null;
     }
 
@@ -84,17 +85,47 @@ export function parse(tokens: Token[]): AST {
         return new Lambda(begin, end, parameters, body);
     }
 
-    function parseQuote(begin: CodePosition): Literal { // this part maybe very dirty
-         return null; // TODO
+    function parseSList(begin: CodePosition): Literal {
+        // TODO
+        return null;
+    }
+
+    function parseQuote(begin?: CodePosition): Literal {
+        if (begin === undefined) { // begin with '
+            begin = cur().begin;
+            match("'");
+        }
+        let values: AST[] = [];
+        let qtokens: Token[] = [];
+        let counter = 0;
+        let value: Literal = null;
+
+        if (cur().is(")")) {
+            throw `Unexpected ")" at ${cur().begin.toString()} when parsing quote expression`;
+        }
+
+        if (cur().is("(")) { // it is a list or a pair
+            const newBegin = match("(").begin;
+            if (cur().is(")")) { // it is a nil
+                const end = match(")").end;
+                value = new NilLiteral(begin, end)
+            } else { // its is a pair
+                value = parseSList(begin);
+            }
+        } else {
+            value = parseAST() as Literal;
+        }
+        return value; // TODO
     }
 
     function parseAST(): AST {
-        if (!cur()) return null;
+        if (empty()) {
+            throw `No more tokens when parsing AST`;
+        }
         if (cur().is("(")) { // is a s-expression
             return parseSExpression();
         } else if (cur().is("'")) { // its is a quote
-            const begin = match().begin;
-            return parseQuote(begin);
+            return parseQuote();
         } else {
             switch (cur().token_type) {
                 case TokenType.BOOLEAN_LITERAL:
@@ -124,8 +155,16 @@ export function parse(tokens: Token[]): AST {
 
     function parseCond(begin: CodePosition): CondStmt {
         match("cond");
-        // TODO
-        return undefined;
+        let cases: [AST, AST][] = [];
+        while (cur().is("(")) {
+            match("(");
+            const first = parseAST();
+            const second = parseAST();
+            match(")");
+            cases.push([first, second]);
+        }
+        const end = match(")").end;
+        return new CondStmt(begin, end, cases);
     }
 
     function parseBegin(begin: CodePosition): Begin {
@@ -168,9 +207,14 @@ export function parse(tokens: Token[]): AST {
                     throw `Unsupported keyword ${head}`;
             }
         } else { // function application
-            // TODO
+            const func = parseAST();
+            let parameters: AST[] = [];
+            while (cur() && !cur().is(")")) {
+                parameters.push(parseAST());
+            }
+            const end = match(")").end;
+            res = new Application(begin, end, func, parameters);
         }
-        res.end = match(")").end;
         return res; // FIXME
     }
 
