@@ -43,8 +43,8 @@ gulp.task('compile:typescript', function () {
   .pipe(tsc({
     module: "commonjs",
       emitError: false,
-      "lib": ["es5", "es6", "es7", "es2016"],
-      "target": "es2018",
+      "lib": ["es5", "es6", "es7", "es2016", "es2017"],
+      "target": "es2016",
       "sourceMap": true,
       "allowJs": true,
       "strict": true,
