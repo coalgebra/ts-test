@@ -1,4 +1,4 @@
-import {CodePosition, Token, TokenType} from "./tokenize";
+import {CodePosition, Token, tokenize, TokenType} from "./tokenize";
 import {
     Application,
     AST,
@@ -225,4 +225,8 @@ export function parse(tokens: Token[]): AST {
     return asts.length <= 1 ?
             asts[0] :
             new Begin(tokens[0].begin, tokens[tokens.length - 1].end, asts);
+}
+
+export function flatPrint(code: string, filename?: string): string {
+    return parse(tokenize(code, filename)).print();
 }
