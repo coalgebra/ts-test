@@ -11,6 +11,8 @@ export abstract class AST {
         this.begin = begin;
         this.end = end;
     }
+
+    public abstract print(): string;
 }
 
 export class Begin extends AST {
@@ -18,6 +20,10 @@ export class Begin extends AST {
     constructor(begin: CodePosition, end: CodePosition, stmts: AST[]) {
         super(begin, end);
         this.stmts = stmts;
+    }
+
+    print(): string {
+        return `(begin ${this.stmts.map(x => x.print()).join(" ")})`;
     }
 }
 
@@ -30,6 +36,10 @@ export class Lambda extends AST {
         this.parameters = parameters;
         this.body = body;
     }
+
+    print(): string {
+        return `(lambda (${this.parameters.join(" ")}) ${this.body.print()}`;
+    }
 }
 
 export class Define extends AST {
@@ -40,6 +50,10 @@ export class Define extends AST {
         super(begin, end);
         this.identifer = identifer;
         this.body = body;
+    }
+
+    print(): string {
+        return `(define ${this.identifer} ${this.body.print()})`;
     }
 }
 
@@ -52,6 +66,10 @@ export class Application extends AST {
         this.func = func;
         this.parameter = parameter;
     }
+
+    print(): string {
+        return `(${this.func.print()} ${this.parameter.map(x => x.print()).join(" ")})`;
+    }
 }
 
 export class Identifer extends AST {
@@ -60,6 +78,10 @@ export class Identifer extends AST {
     constructor(token: Token) {
         super(token.begin, token.end);
         this.name = token.value as string;
+    }
+
+    print(): string {
+        return this.name;
     }
 }
 
@@ -80,6 +102,10 @@ export class IntegerLiteral extends Literal {
         assert(token.token_type === TokenType.INTEGER_LITERAL);
         this.value = token.value as number;
     }
+
+    print(): string {
+        return this.value.toString();
+    }
 }
 
 export class BooleanLiteral extends Literal {
@@ -90,6 +116,10 @@ export class BooleanLiteral extends Literal {
         assert(token.token_type === TokenType.BOOLEAN_LITERAL);
         this.value = token.value as boolean;
     }
+
+    print(): string {
+        return this.value ? "#t" : "#f";
+    }
 }
 
 export class CharLiteral extends Literal {
@@ -99,11 +129,19 @@ export class CharLiteral extends Literal {
         assert(token.token_type === TokenType.CHAR_LITERAL);
         this.value = token.value as string;
     }
+
+    print(): string {
+        return `#\\${this.value}`;
+    }
 }
 
 export class NilLiteral extends Literal {
     constructor(begin: CodePosition, end: CodePosition) {
         super(begin, end, ValueType.NIL);
+    }
+
+    print(): string {
+        return "'()";
     }
 }
 
@@ -115,6 +153,10 @@ export class PairLiteral extends Literal {
         super(begin, end, ValueType.PAIR);
         this.car = car;
         this.cdr = cdr;
+    }
+
+    print(): string {
+        return `(cons ${this.car.print()} ${this.cdr.print()})`;
     }
 }
 
@@ -129,6 +171,11 @@ export class IfStmt extends AST {
         this.pass = pass;
         this.fail = fail;
     }
+
+
+    print(): string {
+        return `(if ${this.cond.print()} ${this.pass.print()} ${this.fail.print()})`;
+    }
 }
 
 export class CondStmt extends AST {
@@ -136,6 +183,10 @@ export class CondStmt extends AST {
     constructor(begin: CodePosition, end: CodePosition, cases: [AST, AST][]) {
         super(begin, end);
         this.cases = cases;
+    }
+
+    print(): string {
+        return `(cond ${this.cases.map(pair => `(${pair[0].print()} ${pair[1].print()})`).join(" ")})`;
     }
 }
 

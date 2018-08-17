@@ -95,9 +95,6 @@ export function parse(tokens: Token[]): AST {
             begin = cur().begin;
             match("'");
         }
-        let values: AST[] = [];
-        let qtokens: Token[] = [];
-        let counter = 0;
         let value: Literal = null;
 
         if (cur().is(")")) {
@@ -113,9 +110,10 @@ export function parse(tokens: Token[]): AST {
                 value = parseSList(begin);
             }
         } else {
-            value = parseAST() as Literal;
+            const temp = parseAST();
+            assert(temp instanceof Literal);
         }
-        return value; // TODO
+        return value;
     }
 
     function parseAST(): AST {

@@ -4,7 +4,8 @@ import {parse} from "./parse";
 const test_code =
 `
 (define a b)
+(fuck (+ 1 2) 2)
 `;
 
 // console.log(tokenize(test_code, "").map(x => x.content).join(","));
-console.log(parse(tokenize(test_code, "")));
+console.log(parse(tokenize(test_code, "")).print());
