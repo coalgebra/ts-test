@@ -3,5 +3,4 @@ node_modules/*
 .idea/*
 *.xml
 .nyc_output
-app/build/*
 coverage
