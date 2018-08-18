@@ -227,6 +227,8 @@ export function parse(tokens: Token[]): AST {
             new Begin(tokens[0].begin, tokens[tokens.length - 1].end, asts);
 }
 
+// noinspection JSUnusedGlobalSymbols
 export function flatPrint(code: string, filename?: string): string {
     return parse(tokenize(code, filename)).print();
 }
+

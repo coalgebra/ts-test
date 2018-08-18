@@ -38,7 +38,7 @@ export class Lambda extends AST {
     }
 
     print(): string {
-        return `(lambda (${this.parameters.join(" ")}) ${this.body.print()}`;
+        return `(lambda (${this.parameters.join(" ")}) ${this.body.print()})`;
     }
 }
 

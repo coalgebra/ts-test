@@ -1,27 +1,28 @@
 {
-  "name": "scheme2c",
-  "version": "0.0.0",
-  "author": "zjuwyd",
-  "main": "app/build/index.js",
-  "dependencies": {
-    "lodash": "^4.17.5"
-  },
-  "devDependencies": {
-    "istanbul": "^0.4.5",
-    "gulp": "^3.6.2",
-    "gulp-shell": "^0.6.5",
-    "gulp-tsc": "^1.3.2",
-    "gulp-tslint": "^2.0.0",
-    "mocha": "*",
-    "nyc": "^12.0.2",
-    "run-sequence": "^1.1.1",
-    "coveralls": "3.0.2",
-    "typescript": "^3.0.1",
-    "@types/node": "^10.5.1"
-  },
-  "scripts": {
-    "main": "gulp buildrun",
-    "test": "gulp build && mocha",
-    "cov": "istanbul cover --report lcov node_modules/mocha/bin/_mocha -- -R spec test/*.js"
-  }
+    "name": "scheme2c",
+    "version": "0.0.0",
+    "author": "zjuwyd",
+    "main": "app/build/index.js",
+    "dependencies": {
+        "lodash": "^4.17.5"
+    },
+    "devDependencies": {
+        "istanbul": "^0.4.5",
+        "gulp": "^3.6.2",
+        "gulp-shell": "^0.6.5",
+        "gulp-tsc": "^1.3.2",
+        "gulp-tslint": "^2.0.0",
+        "mocha": "*",
+        "nyc": "^12.0.2",
+        "run-sequence": "^1.1.1",
+        "coveralls": "3.0.2",
+        "typescript": "^3.0.1",
+        "@types/node": "^10.5.1"
+    },
+    "scripts": {
+        "main": "gulp buildrun",
+        "test": "gulp build && mocha",
+        "cov": "istanbul cover --report lcov node_modules/mocha/bin/_mocha -- -R spec test/*.js",
+        "test-cov": "gulp build && mocha && istanbul cover --report lcov node_modules/mocha/bin/_mocha -- -R spec test/*.js"
+    }
 }
