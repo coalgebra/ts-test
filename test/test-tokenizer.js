@@ -71,3 +71,32 @@ describe("Simple tests for tokenizer", () => {
         selfCheck(codes);
     });
 });
+
+function failTest(codes) {
+    codes.map((code) => {
+        try {
+            tokenizer.tokenize(code);
+        } catch (exp) {
+            // pass
+            return;
+        }
+        assert.fail();
+    });
+}
+
+describe("Negative test cases for tokenizer", () => {
+    it('should throw errors for illegal tokens', function () {
+        const codes = [
+            `123abc`,
+            `##`,
+        ];
+        failTest(codes);
+    });
+    it('should check for escaped block comment', function () {
+        const codes = [
+            '(here-is-a-comment #|',
+            '(here-is-another-comment |#',
+        ];
+        failTest(codes);
+    });
+});

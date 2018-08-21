@@ -113,8 +113,8 @@ class NilLiteral extends Literal {
 }
 exports.NilLiteral = NilLiteral;
 class PairLiteral extends Literal {
-    constructor(begin, end, car, cdr) {
-        super(begin, end, utils_1.ValueType.PAIR);
+    constructor(car, cdr) {
+        super(car.begin, cdr.end, utils_1.ValueType.PAIR);
         this.car = car;
         this.cdr = cdr;
     }

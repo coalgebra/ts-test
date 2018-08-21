@@ -11,7 +11,7 @@ import {
     IfStmt,
     IntegerLiteral,
     Lambda,
-    Literal, NilLiteral
+    Literal, NilLiteral, PairLiteral
 } from "./ast";
 import {isKeyword, isPrimitive} from "./constants";
 import * as assert from "assert";
@@ -85,35 +85,73 @@ export function parse(tokens: Token[]): AST {
         return new Lambda(begin, end, parameters, body);
     }
 
-    function parseSList(begin: CodePosition): Literal {
-        // TODO
-        return null;
+    function parseSList(begin: CodePosition): AST {
+        // matched "("
+        let values: AST[] = [];
+        let list: boolean = true;
+        while (!cur().is(")")) {
+            if (cur().trivial()) {
+                values.push(parseSimpleToken());
+            } else if (cur().is("(")) {
+                const begin_ = match("(").begin;
+                values.push(parseSList(begin_));
+            } else if (cur().is(".")) { //
+                match(".");
+                values.push(parseQuote(cur().begin));
+                match(")");
+                list = false;
+                break;
+            } else {
+                throw `Unexpected token ${cur().content} at ${cur().begin} when parsing s-list`;
+            }
+        }
+        if (list) {
+            const pos = match(")").begin;
+            values.push(new NilLiteral(pos, pos));
+        }
+        let acc: AST = null;
+        for (let i = values.length - 1; i >= 0; i--) {
+            if (!acc) acc = values[i];
+            else {
+                acc = new PairLiteral(values[i], acc);
+            }
+        }
+        return acc;
     }
 
-    function parseQuote(begin?: CodePosition): Literal {
+    function parseQuote(begin?: CodePosition): AST {
         if (begin === undefined) { // begin with '
             begin = cur().begin;
             match("'");
         }
-        let value: Literal = null;
+        let value: AST = null;
 
         if (cur().is(")")) {
             throw `Unexpected ")" at ${cur().begin.toString()} when parsing quote expression`;
         }
 
         if (cur().is("(")) { // it is a list or a pair
-            const newBegin = match("(").begin;
-            if (cur().is(")")) { // it is a nil
-                const end = match(")").end;
-                value = new NilLiteral(begin, end)
-            } else { // its is a pair
-                value = parseSList(begin);
-            }
-        } else {
-            const temp = parseAST();
-            assert(temp instanceof Literal);
+            match("(");
+            value = parseSList(begin);
+        } else if (cur().trivial()) {
+            value = parseSimpleToken();
         }
         return value;
+    }
+
+    function parseSimpleToken(): AST {
+        switch (cur().token_type) {
+            case TokenType.BOOLEAN_LITERAL:
+                return new BooleanLiteral(shift());
+            case TokenType.CHAR_LITERAL:
+                return new CharLiteral(shift());
+            case TokenType.IDENTIFIER:
+                return new Identifer(shift());
+            case TokenType.INTEGER_LITERAL:
+                return new IntegerLiteral(shift());
+            default:
+                throw `Expected simple token, got ${cur().content} at ${cur().begin.toString()}`;
+        }
     }
 
     function parseAST(): AST {
@@ -125,19 +163,7 @@ export function parse(tokens: Token[]): AST {
         } else if (cur().is("'")) { // its is a quote
             return parseQuote();
         } else {
-            switch (cur().token_type) {
-                case TokenType.BOOLEAN_LITERAL:
-                    return new BooleanLiteral(shift());
-                case TokenType.CHAR_LITERAL:
-                    return new CharLiteral(shift());
-                case TokenType.IDENTIFIER:
-                    return new Identifer(shift());
-                case TokenType.INTEGER_LITERAL:
-                    return new IntegerLiteral(shift());
-                case TokenType.STRING_LITERAL:
-                    // TODO : should not come here
-                    throw `should not come here`;
-            }
+            return parseSimpleToken();
         }
     }
 

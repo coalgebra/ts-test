@@ -35,6 +35,7 @@ var TokenType;
     TokenType[TokenType["BOOLEAN_LITERAL"] = 5] = "BOOLEAN_LITERAL";
     TokenType[TokenType["STRING_LITERAL"] = 6] = "STRING_LITERAL";
     TokenType[TokenType["QUOTE"] = 7] = "QUOTE";
+    TokenType[TokenType["VOID"] = 8] = "VOID";
 })(TokenType = exports.TokenType || (exports.TokenType = {}));
 class Token {
     constructor(begin, end, content, token_type, value) {
@@ -56,6 +57,18 @@ class Token {
         }
         else {
             return this.token_type === condition;
+        }
+    }
+    trivial() {
+        switch (this.token_type) {
+            case TokenType.BOOLEAN_LITERAL:
+            case TokenType.CHAR_LITERAL:
+            case TokenType.IDENTIFIER:
+            case TokenType.INTEGER_LITERAL:
+            case TokenType.STRING_LITERAL:
+                return true;
+            default:
+                return false;
         }
     }
 }
@@ -144,6 +157,10 @@ function tokenize(code, filename) {
             }
             continue;
         }
+        if (head === ".") {
+            comment_counter || tokens.push(new Token(begin, begin, ".", TokenType.VOID, "."));
+            continue;
+        }
         if (head === "|") { // maybe block comment end
             if (cur() === "#") { // comment end
                 if (comment_counter) {
@@ -169,7 +186,7 @@ function tokenize(code, filename) {
             comment_counter || tokens.push(new Token(begin, begin, head, TokenType.QUOTE, head));
             continue;
         }
-        if ("0123456789.-".includes(head)) { // number
+        if ("0123456789-".includes(head)) { // number
             while (position.fine() && !isSpace(cur()) && !("[()]".includes(cur())))
                 step();
             let num = code.substr(begin.offset, position.offset - begin.offset);
@@ -190,6 +207,9 @@ function tokenize(code, filename) {
             continue;
         let id = code.substr(begin.offset, position.offset - begin.offset);
         tokens.push(new Token(begin, position, id, TokenType.IDENTIFIER, id));
+    }
+    if (comment_counter) {
+        throw `escaped block comment`;
     }
     return tokens;
 }

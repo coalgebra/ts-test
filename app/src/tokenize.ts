@@ -1,3 +1,5 @@
+import {BooleanLiteral, CharLiteral, Identifer, IntegerLiteral} from "./ast";
+
 export function isSpace(char: any): boolean {
     return char !== "" && " \n\r\t".includes(char);
 }
@@ -39,7 +41,8 @@ export enum TokenType {
     INTEGER_LITERAL = 4,
     BOOLEAN_LITERAL = 5,
     STRING_LITERAL = 6, // TODO
-    QUOTE = 7, // TODO
+    QUOTE = 7, // TODO,
+    VOID = 8,
 }
 
 export class Token {
@@ -66,6 +69,19 @@ export class Token {
             return this.value as Parentheses === condition;
         } else {
             return this.token_type === condition;
+        }
+    }
+
+    trivial(): boolean {
+        switch (this.token_type) {
+            case TokenType.BOOLEAN_LITERAL:
+            case TokenType.CHAR_LITERAL:
+            case TokenType.IDENTIFIER:
+            case TokenType.INTEGER_LITERAL:
+            case TokenType.STRING_LITERAL:
+                return true;
+            default:
+                return false;
         }
     }
 }
@@ -157,6 +173,11 @@ export function tokenize(code: string, filename?: string): Token[] {
             continue;
         }
 
+        if (head === ".") {
+            comment_counter || tokens.push(new Token(begin, begin, ".", TokenType.VOID, "."));
+            continue;
+        }
+
         if (head === "|") { // maybe block comment end
             if (cur() === "#") { // comment end
                 if (comment_counter) {
@@ -184,7 +205,7 @@ export function tokenize(code: string, filename?: string): Token[] {
             continue;
         }
 
-        if ("0123456789.-".includes(head)) { // number
+        if ("0123456789-".includes(head)) { // number
             while (position.fine() && !isSpace(cur()) && !("[()]".includes(cur()))) step();
             let num = code.substr(begin.offset, position.offset - begin.offset);
             if (comment_counter) continue;
@@ -202,6 +223,8 @@ export function tokenize(code: string, filename?: string): Token[] {
         let id = code.substr(begin.offset, position.offset - begin.offset);
         tokens.push(new Token(begin, position, id, TokenType.IDENTIFIER, id));
     }
-
+    if (comment_counter) {
+        throw `escaped block comment`;
+    }
     return tokens;
 }

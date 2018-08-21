@@ -9,12 +9,18 @@ function testCases(codes) {
     });
 }
 
+function testPairs(cases) {
+    cases.map(pair => {
+        const [a, b] = pair;
+        assert.strictEqual(parse(a), b);
+    });
+}
+
 describe("Simple tests for parser", () => {
     it('should parse define correctly', function () {
         const codes = [
             `(define a 1)`,
             `(define b (+ 1 2))`,
-            `(define test '())`
         ];
         testCases(codes);
     });
@@ -54,5 +60,16 @@ describe("Simple tests for parser", () => {
             `(cond (#t 2))`
         ];
         testCases(codes);
+    });
+    it('should parse quote correctly', function () {
+        const cases = [
+            [`'id`, `id`],
+            [`'()`, `'()`],
+            [`'(1)`, `(cons 1 '())`],
+            [`'(a b c)`, `(cons a (cons b (cons c '())))`],
+            [`'(a . b)`, `(cons a b)`],
+            [`'(a . ())`, `(cons a '())`]
+        ];
+        testPairs(cases);
     });
 });

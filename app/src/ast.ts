@@ -146,11 +146,11 @@ export class NilLiteral extends Literal {
 }
 
 export class PairLiteral extends Literal {
-    car: Literal;
-    cdr: Literal;
+    car: AST;
+    cdr: AST;
 
-    constructor(begin: CodePosition, end: CodePosition, car: Literal, cdr: Literal) {
-        super(begin, end, ValueType.PAIR);
+    constructor(car: AST, cdr: AST) {
+        super(car.begin, cdr.end, ValueType.PAIR);
         this.car = car;
         this.cdr = cdr;
     }

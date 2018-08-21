@@ -65,8 +65,41 @@ function parse(tokens) {
         return new ast_1.Lambda(begin, end, parameters, body);
     }
     function parseSList(begin) {
-        // TODO
-        return null;
+        // matched "("
+        let values = [];
+        let list = true;
+        while (!cur().is(")")) {
+            if (cur().trivial()) {
+                values.push(parseSimpleToken());
+            }
+            else if (cur().is("(")) {
+                const begin_ = match("(").begin;
+                values.push(parseSList(begin_));
+            }
+            else if (cur().is(".")) { //
+                match(".");
+                values.push(parseQuote(cur().begin));
+                match(")");
+                list = false;
+                break;
+            }
+            else {
+                throw `Unexpected token ${cur().content} at ${cur().begin} when parsing s-list`;
+            }
+        }
+        if (list) {
+            const pos = match(")").begin;
+            values.push(new ast_1.NilLiteral(pos, pos));
+        }
+        let acc = null;
+        for (let i = values.length - 1; i >= 0; i--) {
+            if (!acc)
+                acc = values[i];
+            else {
+                acc = new ast_1.PairLiteral(values[i], acc);
+            }
+        }
+        return acc;
     }
     function parseQuote(begin) {
         if (begin === undefined) { // begin with '
@@ -78,20 +111,27 @@ function parse(tokens) {
             throw `Unexpected ")" at ${cur().begin.toString()} when parsing quote expression`;
         }
         if (cur().is("(")) { // it is a list or a pair
-            const newBegin = match("(").begin;
-            if (cur().is(")")) { // it is a nil
-                const end = match(")").end;
-                value = new ast_1.NilLiteral(begin, end);
-            }
-            else { // its is a pair
-                value = parseSList(begin);
-            }
+            match("(");
+            value = parseSList(begin);
         }
-        else {
-            const temp = parseAST();
-            assert(temp instanceof ast_1.Literal);
+        else if (cur().trivial()) {
+            value = parseSimpleToken();
         }
         return value;
+    }
+    function parseSimpleToken() {
+        switch (cur().token_type) {
+            case tokenize_1.TokenType.BOOLEAN_LITERAL:
+                return new ast_1.BooleanLiteral(shift());
+            case tokenize_1.TokenType.CHAR_LITERAL:
+                return new ast_1.CharLiteral(shift());
+            case tokenize_1.TokenType.IDENTIFIER:
+                return new ast_1.Identifer(shift());
+            case tokenize_1.TokenType.INTEGER_LITERAL:
+                return new ast_1.IntegerLiteral(shift());
+            default:
+                throw `Expected simple token, got ${cur().content} at ${cur().begin.toString()}`;
+        }
     }
     function parseAST() {
         if (empty()) {
@@ -104,19 +144,7 @@ function parse(tokens) {
             return parseQuote();
         }
         else {
-            switch (cur().token_type) {
-                case tokenize_1.TokenType.BOOLEAN_LITERAL:
-                    return new ast_1.BooleanLiteral(shift());
-                case tokenize_1.TokenType.CHAR_LITERAL:
-                    return new ast_1.CharLiteral(shift());
-                case tokenize_1.TokenType.IDENTIFIER:
-                    return new ast_1.Identifer(shift());
-                case tokenize_1.TokenType.INTEGER_LITERAL:
-                    return new ast_1.IntegerLiteral(shift());
-                case tokenize_1.TokenType.STRING_LITERAL:
-                    // TODO : should not come here
-                    throw `should not come here`;
-            }
+            return parseSimpleToken();
         }
     }
     function parseIf(begin) {
