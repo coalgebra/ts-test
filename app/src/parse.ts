@@ -59,7 +59,7 @@ export function parse(tokens: Token[]): AST {
             throw `Expected token ID, got ${id.content} at ${id.begin.toString()}`;
         }
         const name = id.content;
-        if (isPrimitive(name)) {
+        if (isPrimitive(name) || isKeyword(name)) {
             throw `Should not redefine primitive ${name} at ${id.begin.toString()}`;
         }
         const body = parseAST();

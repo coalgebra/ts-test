@@ -73,3 +73,42 @@ describe("Simple tests for parser", () => {
         testPairs(cases);
     });
 });
+
+function failTest(codes) {
+    codes.map((code) => {
+        try {
+            parse(code);
+        } catch (exp) {
+            // pass
+            return;
+        }
+        assert.fail();
+    });
+}
+
+describe("Negative tests for parser", function () {
+    it('should reject unmatched parentheses', function () {
+        const codes = [
+            `(define `,
+            `(fuck you ( () `,
+            `'(a () ()`
+        ];
+        failTest(codes);
+    });
+    it('should reject redefined keywords', function () {
+        const codes = [
+            `(define define define)`,
+            `(define lambda lamdba)`
+        ];
+        failTest(codes);
+    });
+    it('should reject incompleted statement', function () {
+        const codes = [
+            `(define a)`,
+            `(lambda ())`,
+            `(if #t #f)`,
+            `(cond 1)`
+        ];
+        failTest(codes);
+    });
+});
