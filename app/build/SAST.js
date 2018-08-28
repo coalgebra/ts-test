@@ -26,4 +26,7 @@ exports.SApply = SApply;
 class SBegin extends SAST {
 }
 exports.SBegin = SBegin;
+class SLiteral extends SAST {
+}
+exports.SLiteral = SLiteral;
 //# sourceMappingURL=SAST.js.map

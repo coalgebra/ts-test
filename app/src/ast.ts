@@ -57,6 +57,21 @@ export class Define extends AST {
     }
 }
 
+export class SetBang extends AST {
+    identifer: string;
+    body: AST;
+
+    constructor(begin: CodePosition, end: CodePosition, identifer: string, body: AST) {
+        super(begin, end);
+        this.identifer = identifer;
+        this.body = body;
+    }
+
+    print(): string {
+        return `(set! ${this.identifer} ${this.body.print()})`;
+    }
+}
+
 export class Application extends AST {
     func: AST;
     parameter: AST[];

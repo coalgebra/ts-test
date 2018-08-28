@@ -42,6 +42,17 @@ class Define extends AST {
     }
 }
 exports.Define = Define;
+class SetBang extends AST {
+    constructor(begin, end, identifer, body) {
+        super(begin, end);
+        this.identifer = identifer;
+        this.body = body;
+    }
+    print() {
+        return `(set! ${this.identifer} ${this.body.print()})`;
+    }
+}
+exports.SetBang = SetBang;
 class Application extends AST {
     constructor(begin, end, func, parameter) {
         super(begin, end);

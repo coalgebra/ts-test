@@ -1,3 +1,5 @@
+import {Literal} from "./ast";
+
 export enum SType {
     DEFINE,
     LAMBDA,
@@ -28,4 +30,8 @@ export class SApply extends SAST {
 
 export class SBegin extends SAST {
 
+}
+
+export class SLiteral extends SAST {
+    value: Literal;
 }
