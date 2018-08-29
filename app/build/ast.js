@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const utils_1 = require("./utils");
+const value_1 = require("./value");
 const tokenize_1 = require("./tokenize");
 const assert = require("assert");
 class AST {
@@ -83,7 +83,7 @@ class Literal extends AST {
 exports.Literal = Literal;
 class IntegerLiteral extends Literal {
     constructor(token) {
-        super(token.begin, token.end, utils_1.ValueType.INTEGER);
+        super(token.begin, token.end, value_1.ValueType.INTEGER);
         assert(token.token_type === tokenize_1.TokenType.INTEGER_LITERAL);
         this.value = token.value;
     }
@@ -94,7 +94,7 @@ class IntegerLiteral extends Literal {
 exports.IntegerLiteral = IntegerLiteral;
 class BooleanLiteral extends Literal {
     constructor(token) {
-        super(token.begin, token.end, utils_1.ValueType.BOOLEAN);
+        super(token.begin, token.end, value_1.ValueType.BOOLEAN);
         assert(token.token_type === tokenize_1.TokenType.BOOLEAN_LITERAL);
         this.value = token.value;
     }
@@ -105,7 +105,7 @@ class BooleanLiteral extends Literal {
 exports.BooleanLiteral = BooleanLiteral;
 class CharLiteral extends Literal {
     constructor(token) {
-        super(token.begin, token.end, utils_1.ValueType.CHARACTER);
+        super(token.begin, token.end, value_1.ValueType.CHARACTER);
         assert(token.token_type === tokenize_1.TokenType.CHAR_LITERAL);
         this.value = token.value;
     }
@@ -116,7 +116,7 @@ class CharLiteral extends Literal {
 exports.CharLiteral = CharLiteral;
 class NilLiteral extends Literal {
     constructor(begin, end) {
-        super(begin, end, utils_1.ValueType.NIL);
+        super(begin, end, value_1.ValueType.NIL);
     }
     print() {
         return "'()";
@@ -125,7 +125,7 @@ class NilLiteral extends Literal {
 exports.NilLiteral = NilLiteral;
 class PairLiteral extends Literal {
     constructor(car, cdr) {
-        super(car.begin, cdr.end, utils_1.ValueType.PAIR);
+        super(car.begin, cdr.end, value_1.ValueType.PAIR);
         this.car = car;
         this.cdr = cdr;
     }

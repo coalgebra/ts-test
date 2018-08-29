@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const utils_1 = require("./utils");
+const value_1 = require("./value");
+const value_2 = require("./value");
 exports.keywords = [
     "define",
     "let",
@@ -46,8 +47,8 @@ function getPrimitives(prim, context) {
         }
         const a = parameters[0];
         const b = parameters[1];
-        if (a.is(utils_1.ValueType.BOOLEAN) && b.is(utils_1.ValueType.BOOLEAN)) {
-            return new utils_1.SimpValue(utils_1.ValueType.BOOLEAN, a.value && b.value);
+        if (a.is(value_1.ValueType.BOOLEAN) && b.is(value_1.ValueType.BOOLEAN)) {
+            return new value_2.SimpValue(value_1.ValueType.BOOLEAN, a.value && b.value);
         }
         throw `Type dismatch when calling primitive function <and>`;
     });
@@ -57,8 +58,8 @@ function getPrimitives(prim, context) {
         }
         const a = parameters[0];
         const b = parameters[1];
-        if (a.is(utils_1.ValueType.BOOLEAN) && b.is(utils_1.ValueType.BOOLEAN)) {
-            return new utils_1.SimpValue(utils_1.ValueType.BOOLEAN, a.value || b.value);
+        if (a.is(value_1.ValueType.BOOLEAN) && b.is(value_1.ValueType.BOOLEAN)) {
+            return new value_2.SimpValue(value_1.ValueType.BOOLEAN, a.value || b.value);
         }
         throw `Type dismatch when calling primitive function <or>`;
     });
@@ -68,8 +69,8 @@ function getPrimitives(prim, context) {
         }
         const a = parameters[0];
         const b = parameters[1];
-        if (a.is(utils_1.ValueType.BOOLEAN) && b.is(utils_1.ValueType.BOOLEAN)) {
-            return new utils_1.SimpValue(utils_1.ValueType.BOOLEAN, !a.value && b.value);
+        if (a.is(value_1.ValueType.BOOLEAN) && b.is(value_1.ValueType.BOOLEAN)) {
+            return new value_2.SimpValue(value_1.ValueType.BOOLEAN, !a.value && b.value);
         }
         throw `Type dismatch when calling primitive function <nand>`;
     });
@@ -78,8 +79,8 @@ function getPrimitives(prim, context) {
             throw `Parameter number of primitive <not> must be 1`;
         }
         const a = parameters[0];
-        if (a.is(utils_1.ValueType.BOOLEAN)) {
-            return new utils_1.SimpValue(utils_1.ValueType.BOOLEAN, !a.value);
+        if (a.is(value_1.ValueType.BOOLEAN)) {
+            return new value_2.SimpValue(value_1.ValueType.BOOLEAN, !a.value);
         }
         throw `Type dismatch when calling primitive function <not>`;
     });
@@ -96,8 +97,8 @@ function getPrimitives(prim, context) {
         }
         const a = parameters[0];
         const b = parameters[1];
-        if (a.is(utils_1.ValueType.INTEGER) && b.is(utils_1.ValueType.INTEGER)) {
-            return new utils_1.SimpValue(utils_1.ValueType.INTEGER, a.value + b.value);
+        if (a.is(value_1.ValueType.INTEGER) && b.is(value_1.ValueType.INTEGER)) {
+            return new value_2.SimpValue(value_1.ValueType.INTEGER, a.value + b.value);
         }
         throw `Type dismatch when calling primitive function <add>`;
     });

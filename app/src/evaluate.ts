@@ -15,9 +15,12 @@ import {
     SetBang
 } from "./ast";
 import {Environment} from "./environment";
-import {Continuation, FuncValue, PairValue, SimpValue, Value, ValueType} from "./utils";
+import {ValueType} from "./value";
 import {getPrimitives, isPrimitive} from "./constants";
-import {InteractContext} from "./interact";
+import {InteractContext, TestInteractContext} from "./interact";
+import {Continuation, FuncValue, PairValue, SimpValue, Value} from "./value";
+import {parse} from "./parse";
+import {tokenize} from "./tokenize";
 
 // cps-style interpreter
 export function evaluate(ast: AST, env: Environment, cont: (value: Value) => any, context: InteractContext) {
@@ -29,7 +32,7 @@ export function evaluate(ast: AST, env: Environment, cont: (value: Value) => any
                 evaluate(ast.parameter[0], env, (fun: Value) => {
                     if (fun instanceof FuncValue) {
                         fun.evaluate([new Continuation(cont)], context, cont);
-                    } else if (fun instanceof Continuation) {
+                    } else if (fun   instanceof Continuation) {
                         fun.cont(new Continuation(cont));
                     } else {
                         throw `Parameter of call/cc must be a function`;
@@ -138,6 +141,7 @@ export function evaluate(ast: AST, env: Environment, cont: (value: Value) => any
                 cont(context.VOID_VALUE);
             }
         };
+        evaluate(ast.cases[0][0], env, _cont, context);
     } else if (ast instanceof Identifer) {
         cont(env.find(ast.name));
     } else if (ast instanceof IntegerLiteral) {
@@ -161,4 +165,16 @@ export function evaluate(ast: AST, env: Environment, cont: (value: Value) => any
 
 export function repl() {
 
+}
+
+export function test_evaluate(code: string): string {
+    const context = new TestInteractContext();
+    const cont = (value: Value) => { context.output(value.print()); }; // halt
+    const env = new Environment(null);
+    try {
+        evaluate(parse(tokenize(code)), env, cont, context);
+        return context.result;
+    } catch (xxx) {
+        return xxx;
+    }
 }

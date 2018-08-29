@@ -1,4 +1,5 @@
-import {Value, ValueType} from "./utils";
+import {ValueType} from "./value";
+import {Value} from "./value";
 
 export class Environment {
     bindings: Map<string, Value>;

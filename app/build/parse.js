@@ -49,6 +49,20 @@ function parse(tokens) {
         const end = match(")").end;
         return new ast_1.Define(begin, end, name, body);
     }
+    function parseSetBang(begin) {
+        match("set!");
+        const id = shift();
+        if (id.token_type !== tokenize_1.TokenType.IDENTIFIER) {
+            throw `Expected token ID, got ${id.content} at ${id.begin.toString()}`;
+        }
+        const name = id.content;
+        if (constants_1.isPrimitive(name) || constants_1.isKeyword(name)) {
+            throw `Should not redefine primitive ${name} at ${id.begin.toString()}`;
+        }
+        const body = parseAST();
+        const end = match(")").end;
+        return new ast_1.SetBang(begin, end, name, body);
+    }
     function parseLambda(begin) {
         match("lambda");
         // parsing parameter
@@ -203,6 +217,9 @@ function parse(tokens) {
                 case "quote":
                     match("quote");
                     res = parseQuote(begin);
+                    break;
+                case "set!":
+                    res = parseSetBang(begin);
                     break;
                 default:
                     throw `Unsupported keyword ${head}`;

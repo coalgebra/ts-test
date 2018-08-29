@@ -1,5 +1,6 @@
-import {SimpValue, Value, ValueType} from "./utils";
+import {ValueType} from "./value";
 import {InteractContext} from "./interact";
+import {SimpValue, Value} from "./value";
 
 export const keywords = [
     "define",

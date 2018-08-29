@@ -11,7 +11,7 @@ import {
     IfStmt,
     IntegerLiteral,
     Lambda,
-    Literal, NilLiteral, PairLiteral
+    Literal, NilLiteral, PairLiteral, SetBang
 } from "./ast";
 import {isKeyword, isPrimitive} from "./constants";
 import * as assert from "assert";
@@ -65,6 +65,21 @@ export function parse(tokens: Token[]): AST {
         const body = parseAST();
         const end = match(")").end;
         return new Define(begin, end, name, body);
+    }
+
+    function parseSetBang(begin: CodePosition): SetBang {
+        match("set!");
+        const id = shift();
+        if (id.token_type !== TokenType.IDENTIFIER) {
+            throw `Expected token ID, got ${id.content} at ${id.begin.toString()}`;
+        }
+        const name = id.content;
+        if (isPrimitive(name) || isKeyword(name)) {
+            throw `Should not redefine primitive ${name} at ${id.begin.toString()}`;
+        }
+        const body = parseAST();
+        const end = match(")").end;
+        return new SetBang(begin, end, name, body);
     }
 
     function parseLambda(begin: CodePosition): Lambda {
@@ -226,6 +241,9 @@ export function parse(tokens: Token[]): AST {
                 case "quote":
                     match("quote");
                     res = parseQuote(begin);
+                    break;
+                case "set!":
+                    res = parseSetBang(begin);
                     break;
                 default:
                     throw `Unsupported keyword ${head}`;

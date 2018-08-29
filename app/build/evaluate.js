@@ -2,8 +2,12 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const ast_1 = require("./ast");
 const environment_1 = require("./environment");
-const utils_1 = require("./utils");
+const value_1 = require("./value");
 const constants_1 = require("./constants");
+const interact_1 = require("./interact");
+const value_2 = require("./value");
+const parse_1 = require("./parse");
+const tokenize_1 = require("./tokenize");
 // cps-style interpreter
 function evaluate(ast, env, cont, context) {
     if (ast instanceof ast_1.Application) {
@@ -13,11 +17,11 @@ function evaluate(ast, env, cont, context) {
                 if (ast.parameter.length !== 1)
                     throw `call/cc only need one parameter`;
                 evaluate(ast.parameter[0], env, (fun) => {
-                    if (fun instanceof utils_1.FuncValue) {
-                        fun.evaluate([new utils_1.Continuation(cont)], context, cont);
+                    if (fun instanceof value_2.FuncValue) {
+                        fun.evaluate([new value_2.Continuation(cont)], context, cont);
                     }
-                    else if (fun instanceof utils_1.Continuation) {
-                        fun.cont(new utils_1.Continuation(cont));
+                    else if (fun instanceof value_2.Continuation) {
+                        fun.cont(new value_2.Continuation(cont));
                     }
                     else {
                         throw `Parameter of call/cc must be a function`;
@@ -57,14 +61,14 @@ function evaluate(ast, env, cont, context) {
                         evaluate(ast.parameter[i], env, _cont, context);
                     }
                     else {
-                        if (func instanceof utils_1.Continuation) {
+                        if (func instanceof value_2.Continuation) {
                             if (parameters.length !== 1) {
                                 throw `Parameter numbers for continuation must be one`;
                             }
                             func.cont(parameters[0]);
                         }
                         else {
-                            if (func.type !== utils_1.ValueType.FUNCTION) {
+                            if (func.type !== value_1.ValueType.FUNCTION) {
                                 throw `Func of Application is not a function`;
                             }
                             func.evaluate(parameters, context, cont);
@@ -75,14 +79,14 @@ function evaluate(ast, env, cont, context) {
                     evaluate(ast.parameter[0], env, _cont, context);
                 }
                 else {
-                    if (func instanceof utils_1.Continuation) {
+                    if (func instanceof value_2.Continuation) {
                         if (parameters.length !== 1) {
                             throw `Parameter numbers for continuation must be one`;
                         }
                         func.cont(parameters[0]);
                     }
                     else {
-                        if (func.type !== utils_1.ValueType.FUNCTION) {
+                        if (func.type !== value_1.ValueType.FUNCTION) {
                             throw `Func of Application is not a function`;
                         }
                         func.evaluate([], context, cont);
@@ -118,7 +122,7 @@ function evaluate(ast, env, cont, context) {
         }, context);
     }
     else if (ast instanceof ast_1.Lambda) {
-        cont(new utils_1.FuncValue(env, ast.body, ast.parameters));
+        cont(new value_2.FuncValue(env, ast.body, ast.parameters));
     }
     else if (ast instanceof ast_1.IfStmt) {
         evaluate(ast.cond, env, (cond) => {
@@ -144,18 +148,19 @@ function evaluate(ast, env, cont, context) {
                 cont(context.VOID_VALUE);
             }
         };
+        evaluate(ast.cases[0][0], env, _cont, context);
     }
     else if (ast instanceof ast_1.Identifer) {
         cont(env.find(ast.name));
     }
     else if (ast instanceof ast_1.IntegerLiteral) {
-        cont(new utils_1.SimpValue(utils_1.ValueType.INTEGER, ast.value));
+        cont(new value_2.SimpValue(value_1.ValueType.INTEGER, ast.value));
     }
     else if (ast instanceof ast_1.BooleanLiteral) {
-        cont(new utils_1.SimpValue(utils_1.ValueType.BOOLEAN, ast.value));
+        cont(new value_2.SimpValue(value_1.ValueType.BOOLEAN, ast.value));
     }
     else if (ast instanceof ast_1.CharLiteral) {
-        cont(new utils_1.SimpValue(utils_1.ValueType.CHARACTER, ast.value));
+        cont(new value_2.SimpValue(value_1.ValueType.CHARACTER, ast.value));
     }
     else if (ast instanceof ast_1.NilLiteral) {
         cont(context.NIL_VALUE);
@@ -163,7 +168,7 @@ function evaluate(ast, env, cont, context) {
     else if (ast instanceof ast_1.PairLiteral) {
         evaluate(ast.car, env, (car) => {
             evaluate(ast.cdr, env, (cdr) => {
-                cont(new utils_1.PairValue(car, cdr));
+                cont(new value_2.PairValue(car, cdr));
             }, context);
         }, context);
     }
@@ -175,4 +180,17 @@ exports.evaluate = evaluate;
 function repl() {
 }
 exports.repl = repl;
+function test_evaluate(code) {
+    const context = new interact_1.TestInteractContext();
+    const cont = (value) => { context.output(value.print()); }; // halt
+    const env = new environment_1.Environment(null);
+    try {
+        evaluate(parse_1.parse(tokenize_1.tokenize(code)), env, cont, context);
+        return context.result;
+    }
+    catch (xxx) {
+        return xxx;
+    }
+}
+exports.test_evaluate = test_evaluate;
 //# sourceMappingURL=evaluate.js.map

@@ -1,4 +1,4 @@
-import {ValueType} from "./utils";
+import {ValueType} from "./value";
 import {CodePosition, Token, TokenType} from "./tokenize";
 import * as assert from "assert";
 
