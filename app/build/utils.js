@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const environment_1 = require("./environment");
 class Context {
 }
 exports.Context = Context;
@@ -12,6 +13,7 @@ var ValueType;
     ValueType[ValueType["PAIR"] = 4] = "PAIR";
     ValueType[ValueType["NIL"] = 5] = "NIL";
     ValueType[ValueType["VOID"] = 6] = "VOID";
+    ValueType[ValueType["CONTINUATION"] = 7] = "CONTINUATION";
 })(ValueType = exports.ValueType || (exports.ValueType = {}));
 class CommandLineArguments {
 }
@@ -28,11 +30,16 @@ class SimpValue extends Value {
         this.value = value;
     }
     is(cond) {
-        return false;
+        return this.type === cond;
+    }
+    eq(val) {
+        return this.value === val;
+    }
+    print() {
+        return this.value === undefined ? "#<void>" : this.value.toString();
     }
 }
 exports.SimpValue = SimpValue;
-exports.VOID_VALUE = new SimpValue(ValueType.VOID, null);
 class PairValue extends Value {
     constructor(car, cdr) {
         super(ValueType.PAIR);
@@ -43,23 +50,52 @@ class PairValue extends Value {
         // TODO
         return false;
     }
+    eq(val) {
+        return false;
+    }
+    print() {
+        // TODO
+        return "";
+    }
 }
 exports.PairValue = PairValue;
 class FuncValue extends Value {
     constructor(env, body, paramNames) {
         super(ValueType.FUNCTION);
-        this.env = env;
+        // create a new environment
+        this.env = new environment_1.Environment(env);
         this.body = body;
         this.paramNames = paramNames;
     }
     is(cond) {
-        // TODO
+        return cond === ValueType.FUNCTION;
+    }
+    eq(val) {
         return false;
     }
-    evaluate(parameters) {
+    evaluate(parameters, context, cont) {
         // TODO
         return null;
     }
+    print() {
+        return "#<procedure>";
+    }
 }
 exports.FuncValue = FuncValue;
+class Continuation extends Value {
+    constructor(cont) {
+        super(ValueType.CONTINUATION);
+        this.cont = cont;
+    }
+    eq(val) {
+        return false;
+    }
+    is(cond) {
+        return cond === ValueType.CONTINUATION;
+    }
+    print() {
+        return "#<continuation>";
+    }
+}
+exports.Continuation = Continuation;
 //# sourceMappingURL=utils.js.map
