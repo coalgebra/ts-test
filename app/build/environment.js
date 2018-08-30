@@ -18,6 +18,9 @@ class Environment {
             cur = cur.parent;
             res = cur ? cur.findInCur(name) : null;
         }
+        if (!res) {
+            throw `Can not find identifier ${name}`;
+        }
         return res;
     }
     modify(name, value) {

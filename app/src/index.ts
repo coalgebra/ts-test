@@ -6,7 +6,7 @@ import {evaluate, test_evaluate} from "./evaluate";
 
 const test_code =
 `
-(cond (#f 1) (#t 2))
+(nand #t #f)
 `;
 
 // console.log(tokenize(test_code, "").map(x => x.content).join(","));

@@ -45,15 +45,17 @@ class PairValue extends Value {
         this.cdr = cdr;
     }
     is(cond) {
-        // TODO
-        return false;
+        return cond === ValueType.PAIR;
     }
     eq(val) {
         return false;
     }
     print() {
-        // TODO
-        return "";
+        if (this.cdr.type === ValueType.NIL)
+            return `(${this.car.print()})`;
+        if (this.cdr.type === ValueType.PAIR)
+            return `(${this.car.print()} ${this.cdr.print()})`;
+        return `(${this.car.print()} . ${this.cdr.print()})`;
     }
 }
 exports.PairValue = PairValue;

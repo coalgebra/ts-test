@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const value_1 = require("./value");
-const value_2 = require("./value");
 exports.keywords = [
     "define",
     "let",
@@ -30,6 +29,10 @@ exports.primitives = [
     "<",
     ">",
     "call/cc",
+    "car",
+    "cdr",
+    "cons",
+    "null?"
 ];
 function isKeyword(token) {
     return exports.keywords.includes(token);
@@ -48,7 +51,7 @@ function getPrimitives(prim, context) {
         const a = parameters[0];
         const b = parameters[1];
         if (a.is(value_1.ValueType.BOOLEAN) && b.is(value_1.ValueType.BOOLEAN)) {
-            return new value_2.SimpValue(value_1.ValueType.BOOLEAN, a.value && b.value);
+            return new value_1.SimpValue(value_1.ValueType.BOOLEAN, a.value && b.value);
         }
         throw `Type dismatch when calling primitive function <and>`;
     });
@@ -59,7 +62,7 @@ function getPrimitives(prim, context) {
         const a = parameters[0];
         const b = parameters[1];
         if (a.is(value_1.ValueType.BOOLEAN) && b.is(value_1.ValueType.BOOLEAN)) {
-            return new value_2.SimpValue(value_1.ValueType.BOOLEAN, a.value || b.value);
+            return new value_1.SimpValue(value_1.ValueType.BOOLEAN, a.value || b.value);
         }
         throw `Type dismatch when calling primitive function <or>`;
     });
@@ -70,7 +73,7 @@ function getPrimitives(prim, context) {
         const a = parameters[0];
         const b = parameters[1];
         if (a.is(value_1.ValueType.BOOLEAN) && b.is(value_1.ValueType.BOOLEAN)) {
-            return new value_2.SimpValue(value_1.ValueType.BOOLEAN, !a.value && b.value);
+            return new value_1.SimpValue(value_1.ValueType.BOOLEAN, !(a.value && b.value));
         }
         throw `Type dismatch when calling primitive function <nand>`;
     });
@@ -80,7 +83,7 @@ function getPrimitives(prim, context) {
         }
         const a = parameters[0];
         if (a.is(value_1.ValueType.BOOLEAN)) {
-            return new value_2.SimpValue(value_1.ValueType.BOOLEAN, !a.value);
+            return new value_1.SimpValue(value_1.ValueType.BOOLEAN, !a.value);
         }
         throw `Type dismatch when calling primitive function <not>`;
     });
@@ -91,6 +94,13 @@ function getPrimitives(prim, context) {
         context.output(parameters[0].print());
         return context.VOID_VALUE;
     });
+    match.set("newline", (parameters) => {
+        if (parameters.length !== 0) {
+            throw `Parameter number of primitive <newline> must be 0`;
+        }
+        context.output("\n");
+        return context.VOID_VALUE;
+    });
     match.set("+", (parameters) => {
         if (parameters.length !== 2) {
             throw `Parameter number of primitive <add> must be 2`;
@@ -98,9 +108,56 @@ function getPrimitives(prim, context) {
         const a = parameters[0];
         const b = parameters[1];
         if (a.is(value_1.ValueType.INTEGER) && b.is(value_1.ValueType.INTEGER)) {
-            return new value_2.SimpValue(value_1.ValueType.INTEGER, a.value + b.value);
+            return new value_1.SimpValue(value_1.ValueType.INTEGER, a.value + b.value);
         }
         throw `Type dismatch when calling primitive function <add>`;
+    });
+    match.set("-", (parameters) => {
+        if (parameters.length !== 2) {
+            throw `Parameter number of primitive <add> must be 2`;
+        }
+        const a = parameters[0];
+        const b = parameters[1];
+        if (a.is(value_1.ValueType.INTEGER) && b.is(value_1.ValueType.INTEGER)) {
+            return new value_1.SimpValue(value_1.ValueType.INTEGER, a.value - b.value);
+        }
+        throw `Type dismatch when calling primitive function <add>`;
+    });
+    match.set("cons", parameters => {
+        if (parameters.length !== 2) {
+            throw `Parameter number of primitive <cons> must be 2`;
+        }
+        return new value_1.PairValue(parameters[0], parameters[1]);
+    });
+    match.set("car", parameters => {
+        if (parameters.length !== 1) {
+            throw `Parameter number of primitive <car> must be 1`;
+        }
+        const val = parameters[0];
+        if (val instanceof value_1.PairValue) {
+            return val.car;
+        }
+        else {
+            throw `Parameter of primitive <car> must be a pair`;
+        }
+    });
+    match.set("cdr", parameters => {
+        if (parameters.length !== 1) {
+            throw `Parameter number of primitive <cdr> must be 1`;
+        }
+        const val = parameters[0];
+        if (val instanceof value_1.PairValue) {
+            return val.cdr;
+        }
+        else {
+            throw `Parameter of primitive <cdr> must be a pair`;
+        }
+    });
+    match.set("null?", parameters => {
+        if (parameters.length !== 1) {
+            throw `Parameter number of primitive <null?> must be 1`;
+        }
+        return new value_1.SimpValue(value_1.ValueType.BOOLEAN, parameters[0].type === value_1.ValueType.NIL);
     });
     if (match.has(prim)) {
         return match.get(prim);

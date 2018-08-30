@@ -24,13 +24,19 @@ describe("Simple tests for evaluator", () => {
             [`(+ 1 2)`, `3`],
             [`(and #t #f)`, `#f`],
             [`(or #t #f)`, `#t`],
-            [`(display 1)`, `1#<void>`]
+            [`(display 1)`, `1#<void>`],
+            [`(newline)`, `\n#<void>`],
+            [`(not #t)`, `#f`],
+            [`(nand #t #f)`, `#t`],
+            [`(null? '())`, `#t`],
+            [`(null? '(1))`, `#f`]
         ];
         testPairs(tests);
     });
     it('should work for lambda expression', function () {
         const tests = [
-            [`(lambda (x) x)`, `#<procedure>`]
+            [`(lambda (x) x)`, `#<procedure>`],
+            [`(lambda (x y) x)`, `#<procedure>`]
         ];
         testPairs(tests);
     });
@@ -39,6 +45,7 @@ describe("Simple tests for evaluator", () => {
             [`((lambda () 1))`, `1`],
             [`((lambda (x) x) 1)`, `1`],
             [`(((lambda (x) x) (lambda (x) x)) 1)`, `1`],
+            [`((lambda (x y) x) 1 2)`, `1`]
         ];
         testPairs(tests);
     });
@@ -98,5 +105,40 @@ describe("Simple tests for evaluator", () => {
         ];
         testPairs(tests);
     });
+    it('should work for pairs', function () {
+        const tests = [
+            [`(car '(1))`, `1`],
+            [`(cdr '(1))`, `()`],
+            [`(cons 1 2)`, `(1 . 2)`],
+            [`(cons 1 '())`, `(1)`],
+            [`(begin
+                (define cadr (lambda (x) (car (cdr x))))
+                (cadr '(1 (1))))`, `(1)`]
+        ];
+        testPairs(tests);
+    });
 });
 
+describe("Some complex tests for evaluator", () => {
+    it('should work for binding shadows', function () {
+        const tests = [
+            [`(begin
+                (define a 1)
+                (begin (define a 2)
+                       (display a))
+                a)`, `21`],
+            [`(begin
+                (define a 1)
+                (begin (define a 2)
+                       (set! a 3)
+                       (display a))
+                a)`, `31`],
+            [`(begin
+                (define a 1)
+                (begin (set! a 3)
+                       (display a))
+                a)`, `33`],
+        ];
+        testPairs(tests);
+    });
+});

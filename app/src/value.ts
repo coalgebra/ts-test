@@ -62,9 +62,8 @@ export class PairValue extends Value {
         this.cdr = cdr;
     }
 
-    is(cond: ValueType | boolean | number | string): boolean {
-        // TODO
-        return false;
+    is(cond: ValueType): boolean {
+        return cond === ValueType.PAIR;
     }
 
     eq(val: string | number | boolean): boolean {
@@ -72,8 +71,11 @@ export class PairValue extends Value {
     }
 
     print(): string {
-        // TODO
-        return "";
+        if (this.cdr.type === ValueType.NIL)
+            return `(${this.car.print()})`;
+        if (this.cdr.type === ValueType.PAIR)
+            return `(${this.car.print()} ${this.cdr.print()})`;
+        return `(${this.car.print()} . ${this.cdr.print()})`
     }
 }
 
