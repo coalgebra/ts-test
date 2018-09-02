@@ -1,15 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const evaluate_1 = require("./evaluate");
+const tokenize_1 = require("./tokenize");
+const parse_1 = require("./parse");
 const test_code = `
-(letrec 
-    ((x (lambda (n) 
-        (if (eq? n 0) 0 (y (- n 1)))))
-     (y (lambda (n) 
-        (if (eq? n 0) 1 (x (- n 1))))))
-    (x 6))
+(cond (#f 1) (else 2))
 `;
 // console.log(tokenize(test_code, "").map(x => x.content).join(","));
 // console.log();
-console.log(evaluate_1.test_evaluate(test_code));
+console.log(parse_1.parse(tokenize_1.tokenize(test_code)).print());
 //# sourceMappingURL=index.js.map

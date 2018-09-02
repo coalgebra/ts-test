@@ -56,10 +56,16 @@ describe("Simple tests for parser", () => {
     });
     it('should parse cond correctly', function () {
         const codes = [
-            `(cond (#f 1) (else 2))`,
+            `(cond (#f 1) (#t 2))`,
             `(cond (#t 2))`
         ];
         testCases(codes);
+    });
+    it('should transform else correctly', function () {
+        const cases = [
+            [`(cond (else 1))`, `(cond (#t 1))`]
+        ];
+        testPairs(cases);
     });
     it('should parse quote correctly', function () {
         const cases = [
