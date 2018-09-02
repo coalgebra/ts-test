@@ -117,6 +117,35 @@ describe("Simple tests for evaluator", () => {
         ];
         testPairs(tests);
     });
+    it('should work for let and let*', function () {
+        const tests = [
+            [`(let ((x 1)) x)`, `1`],
+            [`(let ((x 1))
+               (let ((x 2) (y x))
+                y))`, `1`],
+            [`(let ((x 1))
+               (let* ((x 2) (y x))
+                y))`, `2`]
+        ];
+        testPairs(tests);
+    });
+    it('should work for letrec', function () {
+        const tests = [
+            [`(letrec 
+                ((x (lambda (n) 
+                    (if (eq? n 0) 0 (y (- n 1)))))
+                 (y (lambda (n) 
+                    (if (eq? n 0) 1 (x (- n 1))))))
+                (x 6))`, `0`],
+            [`(letrec 
+                ((x (lambda (n) 
+                    (if (eq? n 0) 0 (y (- n 1)))))
+                 (y (lambda (n) 
+                    (if (eq? n 0) 1 (x (- n 1))))))
+                (x 5))`, `1`]
+        ];
+        testPairs(tests);
+    });
 });
 
 describe("Some complex tests for evaluator", () => {
@@ -138,6 +167,72 @@ describe("Some complex tests for evaluator", () => {
                 (begin (set! a 3)
                        (display a))
                 a)`, `33`],
+        ];
+        testPairs(tests);
+    });
+    it('should work for lambda-define syntax sugar', function () {
+        const tests = [
+            [`(begin (define (id x) x)
+                id)`, `#<procedure>`],
+            [`(begin 
+                (define (const x y) x)
+                (const 1 2))`, `1`],
+        ];
+        testPairs(tests);
+    });
+    it('should work for lambda-begin syntax sugar', function () {
+        const tests = [
+            [`((lambda (x) (display x) x) 1)`, `11`]
+        ];
+        testPairs(tests);
+    });
+    it('should work for a complex cases', function () {
+        const tests = [ [
+            `
+(define (map xs f) 
+ (if (null? xs) 
+     '()
+     (cons (f (car xs)) 
+           (map (cdr xs) f))))
+(display (map '(1 2 3) (lambda (x) (+ x 1))))
+(newline)
+(define (fold xs f acc)
+ (if (null? xs)
+     acc
+     (f (car xs) (fold (cdr xs) f acc))))
+(define (add x y) (+ x y))
+(fold '(1 2 3) add 0)
+(define (yield xs) 
+  (begin
+    (define res xs)
+    (define (gen) 
+      (if (null? res) '()
+          ((lambda (x)
+            (set! res (cdr res))
+            x) (car res))))
+    gen))
+(define g (yield '(1 2 3)))
+(display (g))
+(display (g))
+(display (g))
+(display (g))
+(newline)
+(define (get/cc) (call/cc (lambda (x) x)))
+(define cc #f)
+(set! cc (get/cc))
+(cc 1)
+(display cc)
+(newline)
+(display 
+    ((lambda (n)
+     ((lambda (fact)
+       ((fact fact) n))
+       (lambda (fact)
+       (lambda (n)
+           (if (eq? 0 n)
+               1
+               (* n ((fact fact) (- n 1)))))))) 5))`,
+            `(2 3 4)\n123()\n1\n120#<void>`]
         ];
         testPairs(tests);
     });

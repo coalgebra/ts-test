@@ -74,6 +74,18 @@ class Identifer extends AST {
     }
 }
 exports.Identifer = Identifer;
+class Let extends AST {
+    constructor(begin, end, bindings, body, star = false) {
+        super(begin, end);
+        this.bindings = bindings;
+        this.body = body;
+        this.star = star;
+    }
+    print() {
+        return `(let${this.star ? "*" : ""} (${this.bindings.map(pair => `(${pair[0]} ${pair[1].print()})`).join(" ")}) ${this.body.print()}`;
+    }
+}
+exports.Let = Let;
 class Literal extends AST {
     constructor(begin, end, valueType) {
         super(begin, end);
@@ -149,6 +161,22 @@ exports.IfStmt = IfStmt;
 class CondStmt extends AST {
     constructor(begin, end, cases) {
         super(begin, end);
+        let flag = false;
+        for (let i = 0; i < cases.length; i++) {
+            const head = cases[i][0];
+            if (head instanceof Identifer) {
+                if (head.name === "else" && i !== cases.length - 1) {
+                    throw `Else branch must be the last one of condition statement at ${head.begin.toString()}`;
+                }
+                if (head.name === "else" && flag) {
+                    throw `Duplicate else at ${head.begin.toString()}`;
+                }
+                if (head.name === "else") {
+                    flag = true;
+                    cases[i][0] = new BooleanLiteral(new tokenize_1.Token(head.begin, head.end, "#t", tokenize_1.TokenType.BOOLEAN_LITERAL, true));
+                }
+            }
+        }
         this.cases = cases;
     }
     print() {
@@ -156,4 +184,15 @@ class CondStmt extends AST {
     }
 }
 exports.CondStmt = CondStmt;
+class Letrec extends AST {
+    constructor(begin, end, bindings, body) {
+        super(begin, end);
+        this.bindings = bindings;
+        this.body = body;
+    }
+    print() {
+        return `(letrec (${this.bindings.map(pair => `(${pair[0]} ${pair[1].print()})`).join(" ")}) ${this.body.print()}`;
+    }
+}
+exports.Letrec = Letrec;
 //# sourceMappingURL=ast.js.map

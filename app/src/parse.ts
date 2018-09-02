@@ -11,7 +11,10 @@ import {
     IfStmt,
     IntegerLiteral,
     Lambda,
-    Literal, NilLiteral, PairLiteral, SetBang
+    Let, Letrec,
+    NilLiteral,
+    PairLiteral,
+    SetBang
 } from "./ast";
 import {isKeyword, isPrimitive} from "./constants";
 import * as assert from "assert";
@@ -55,6 +58,19 @@ export function parse(tokens: Token[]): AST {
     function parseDefine(begin: CodePosition): Define {
         match("define");
         const id = shift();
+        if (id.is("(")) {
+            // (define (id x) x) syntax sugar
+            const lambda_begin = cur().begin;
+            const new_id = shift(TokenType.IDENTIFIER).content;
+            const parameters: string[] = [];
+            while (!cur().is(")")) {
+                parameters.push(shift(TokenType.IDENTIFIER).content);
+            }
+            match(")");
+            const body = parseAST();
+            const end = match(")").end;
+            return new Define(begin, end, new_id, new Lambda(lambda_begin, end, parameters, body))
+        }
         if (id.token_type !== TokenType.IDENTIFIER) {
             throw `Expected token ID, got ${id.content} at ${id.begin.toString()}`;
         }
@@ -82,6 +98,40 @@ export function parse(tokens: Token[]): AST {
         return new SetBang(begin, end, name, body);
     }
 
+    function parseLetrec(begin: CodePosition): Letrec {
+        match(`letrec`);
+        match("(");
+        const bindings : [string, AST][] = [];
+        while (cur().is("(")) {
+            match("(");
+            const name = match(TokenType.IDENTIFIER);
+            const binding = parseAST();
+            match(")");
+            bindings.push([name.content, binding]);
+        }
+        match(")");
+        const body = parseAST();
+        const end = match(")").end;
+        return new Letrec(begin, end, bindings, body);
+    }
+
+    function parseLet(begin: CodePosition, star: boolean = false): Let {
+        match(`let${star ? "*" : ""}`);
+        match("(");
+        const bindings : [string, AST][] = [];
+        while (cur().is("(")) {
+            match("(");
+            const name = match(TokenType.IDENTIFIER);
+            const binding = parseAST();
+            match(")");
+            bindings.push([name.content, binding]);
+        }
+        match(")");
+        const body = parseAST();
+        const end = match(")").end;
+        return new Let(begin, end, bindings, body, star);
+    }
+
     function parseLambda(begin: CodePosition): Lambda {
         match("lambda");
         // parsing parameter
@@ -94,10 +144,17 @@ export function parse(tokens: Token[]): AST {
         match(")");
 
         // parsing body
-
         const body = parseAST();
+        if (cur().is(")")) {
+            const end = match(")").end;
+            return new Lambda(begin, end, parameters, body);
+        }
+        const block: AST[] = [body];
+        while (!cur().is(")")) {
+            block.push(parseAST());
+        }
         const end = match(")").end;
-        return new Lambda(begin, end, parameters, body);
+        return new Lambda(begin, end, parameters, new Begin(block[0].begin, end, block));
     }
 
     function parseSList(begin: CodePosition): AST {
@@ -244,6 +301,15 @@ export function parse(tokens: Token[]): AST {
                     break;
                 case "set!":
                     res = parseSetBang(begin);
+                    break;
+                case "let":
+                    res = parseLet(begin);
+                    break;
+                case "let*":
+                    res = parseLet(begin, true);
+                    break;
+                case "letrec":
+                    res = parseLetrec(begin);
                     break;
                 default:
                     throw `Unsupported keyword ${head}`;

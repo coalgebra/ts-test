@@ -2,9 +2,11 @@ import {Environment} from "./environment";
 import {AST} from "./ast";
 import {InteractContext} from "./interact";
 import {evaluate} from "./evaluate";
+import {SAST} from "./SAST";
 
 export enum ValueType {
     FUNCTION,
+    SFUNCTION,
     BOOLEAN,
     INTEGER,
     CHARACTER, // TODO
@@ -73,9 +75,11 @@ export class PairValue extends Value {
     print(): string {
         if (this.cdr.type === ValueType.NIL)
             return `(${this.car.print()})`;
-        if (this.cdr.type === ValueType.PAIR)
-            return `(${this.car.print()} ${this.cdr.print()})`;
-        return `(${this.car.print()} . ${this.cdr.print()})`
+        if (this.cdr.type === ValueType.PAIR) {
+            let res = this.cdr.print();
+            return `(${this.car.print()} ${res.slice(1, res.length - 1)})`;
+        }
+        return `(${this.car.print()} . ${this.cdr.print()})`;
     }
 }
 
@@ -99,7 +103,7 @@ export class FuncValue extends Value {
         return false;
     }
 
-    evaluate(parameters: Value[], context: InteractContext, cont: (val: Value) => any) {
+    apply(parameters: Value[], context: InteractContext, cont: (val: Value) => any) {
         if (parameters.length !== this.paramNames.length) {
             throw `Parameter number dismatch`;
         }
@@ -108,6 +112,29 @@ export class FuncValue extends Value {
             new_env.define(this.paramNames[i], parameters[i]);
         }
         return evaluate(this.body, new_env, cont, context);
+    }
+
+    print(): string {
+        return "#<procedure>";
+    }
+}
+
+export class SFunction extends Value {
+    body: SAST;
+    paramNames: string[];
+
+    constructor(body: SAST, paramNames: string[]) {
+        super(ValueType.SFUNCTION);
+        this.body = body;
+        this.paramNames = paramNames;
+    }
+
+    is(cond: ValueType | boolean | number | string): boolean {
+        return cond === ValueType.SFUNCTION;
+    }
+
+    eq(val: string | number | boolean): boolean {
+        return false;
     }
 
     print(): string {

@@ -11,7 +11,8 @@ export const keywords = [
     "letrec",
     "else",
     "begin",
-    "quote"
+    "quote",
+    "let*",
 ];
 
 export const primitives = [
@@ -33,7 +34,8 @@ export const primitives = [
     "car",
     "cdr",
     "cons",
-    "null?"
+    "null?",
+    "eq?"
 ];
 
 export function isKeyword(token: string): boolean {
@@ -120,7 +122,7 @@ export function getPrimitives(prim: string, context: InteractContext): (paramete
     });
     match.set("-", (parameters: Value[]) => {
         if (parameters.length !== 2) {
-            throw `Parameter number of primitive <add> must be 2`;
+            throw `Parameter number of primitive <sub> must be 2`;
         }
         const a = parameters[0];
         const b = parameters[1];
@@ -128,7 +130,19 @@ export function getPrimitives(prim: string, context: InteractContext): (paramete
             return new SimpValue(ValueType.INTEGER,
                 ((a as SimpValue).value as number) - ((b as SimpValue).value as number));
         }
-        throw `Type dismatch when calling primitive function <add>`;
+        throw `Type dismatch when calling primitive function <sub>`;
+    });
+    match.set("*", (parameters: Value[]) => {
+        if (parameters.length !== 2) {
+            throw `Parameter number of primitive <mul> must be 2`;
+        }
+        const a = parameters[0];
+        const b = parameters[1];
+        if (a.is(ValueType.INTEGER) && b.is(ValueType.INTEGER)) {
+            return new SimpValue(ValueType.INTEGER,
+                ((a as SimpValue).value as number) * ((b as SimpValue).value as number));
+        }
+        throw `Type dismatch when calling primitive function <mul>`;
     });
     match.set("cons", parameters => {
         if (parameters.length !== 2) {
@@ -163,6 +177,17 @@ export function getPrimitives(prim: string, context: InteractContext): (paramete
             throw `Parameter number of primitive <null?> must be 1`;
         }
         return new SimpValue(  ValueType.BOOLEAN,parameters[0].type === ValueType.NIL);
+    });
+    match.set("eq?", parameters => {
+        if (parameters.length !== 2) {
+            throw `Parameter number of primitive <eq?> must be 2`;
+        }
+        if (parameters[0].type !== parameters[1].type) return new SimpValue(ValueType.BOOLEAN, false);
+        if (parameters[0] instanceof SimpValue) {
+            return new SimpValue(ValueType.BOOLEAN,
+                (parameters[0] as SimpValue).value === (parameters[1] as SimpValue).value);
+        }
+        return new SimpValue(ValueType.BOOLEAN, parameters[0] === parameters[1]);
     });
     if (match.has(prim)) {
         return match.get(prim);

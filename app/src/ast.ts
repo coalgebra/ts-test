@@ -100,6 +100,26 @@ export class Identifer extends AST {
     }
 }
 
+export class Let extends AST {
+    bindings: [string, AST][];
+    body: AST;
+    star: boolean;
+
+    constructor(begin: CodePosition, end: CodePosition, bindings: [string, AST][], body: AST, star: boolean = false) {
+        super(begin, end);
+        this.bindings = bindings;
+        this.body = body;
+        this.star = star;
+    }
+
+    print(): string {
+        return `(let${this.star ? "*" : ""} (${
+            this.bindings.map(pair => `(${pair[0]} ${pair[1].print()})`).join(" ")
+        }) ${this.body.print()}`;
+    }
+}
+
+
 export abstract class Literal extends AST {
     valueType: ValueType;
 
@@ -108,6 +128,8 @@ export abstract class Literal extends AST {
         this.valueType = valueType;
     }
 }
+
+
 
 export class IntegerLiteral extends Literal {
     value: number;
@@ -197,6 +219,22 @@ export class CondStmt extends AST {
     cases: [AST, AST][];
     constructor(begin: CodePosition, end: CodePosition, cases: [AST, AST][]) {
         super(begin, end);
+        let flag: boolean = false;
+        for (let i = 0; i < cases.length; i++) {
+            const head = cases[i][0];
+            if (head instanceof Identifer) {
+                if (head.name === "else" && i !== cases.length - 1) {
+                    throw `Else branch must be the last one of condition statement at ${head.begin.toString()}`;
+                }
+                if (head.name === "else" && flag) {
+                    throw `Duplicate else at ${head.begin.toString()}`;
+                }
+                if (head.name === "else") {
+                    flag = true;
+                    cases[i][0] = new BooleanLiteral(new Token(head.begin, head.end, "#t", TokenType.BOOLEAN_LITERAL, true));
+                }
+            }
+        }
         this.cases = cases;
     }
 
@@ -205,3 +243,19 @@ export class CondStmt extends AST {
     }
 }
 
+export class Letrec extends AST {
+    bindings: [string, AST][];
+    body: AST;
+
+    constructor(begin: CodePosition, end: CodePosition, bindings: [string, AST][], body: AST) {
+        super(begin, end);
+        this.bindings = bindings;
+        this.body = body;
+    }
+
+    print(): string {
+        return `(letrec (${
+            this.bindings.map(pair => `(${pair[0]} ${pair[1].print()})`).join(" ")
+            }) ${this.body.print()}`;
+    }
+}

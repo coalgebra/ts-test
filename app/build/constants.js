@@ -11,7 +11,8 @@ exports.keywords = [
     "letrec",
     "else",
     "begin",
-    "quote"
+    "quote",
+    "let*",
 ];
 exports.primitives = [
     "and",
@@ -32,7 +33,8 @@ exports.primitives = [
     "car",
     "cdr",
     "cons",
-    "null?"
+    "null?",
+    "eq?"
 ];
 function isKeyword(token) {
     return exports.keywords.includes(token);
@@ -114,14 +116,25 @@ function getPrimitives(prim, context) {
     });
     match.set("-", (parameters) => {
         if (parameters.length !== 2) {
-            throw `Parameter number of primitive <add> must be 2`;
+            throw `Parameter number of primitive <sub> must be 2`;
         }
         const a = parameters[0];
         const b = parameters[1];
         if (a.is(value_1.ValueType.INTEGER) && b.is(value_1.ValueType.INTEGER)) {
             return new value_1.SimpValue(value_1.ValueType.INTEGER, a.value - b.value);
         }
-        throw `Type dismatch when calling primitive function <add>`;
+        throw `Type dismatch when calling primitive function <sub>`;
+    });
+    match.set("*", (parameters) => {
+        if (parameters.length !== 2) {
+            throw `Parameter number of primitive <mul> must be 2`;
+        }
+        const a = parameters[0];
+        const b = parameters[1];
+        if (a.is(value_1.ValueType.INTEGER) && b.is(value_1.ValueType.INTEGER)) {
+            return new value_1.SimpValue(value_1.ValueType.INTEGER, a.value * b.value);
+        }
+        throw `Type dismatch when calling primitive function <mul>`;
     });
     match.set("cons", parameters => {
         if (parameters.length !== 2) {
@@ -158,6 +171,17 @@ function getPrimitives(prim, context) {
             throw `Parameter number of primitive <null?> must be 1`;
         }
         return new value_1.SimpValue(value_1.ValueType.BOOLEAN, parameters[0].type === value_1.ValueType.NIL);
+    });
+    match.set("eq?", parameters => {
+        if (parameters.length !== 2) {
+            throw `Parameter number of primitive <eq?> must be 2`;
+        }
+        if (parameters[0].type !== parameters[1].type)
+            return new value_1.SimpValue(value_1.ValueType.BOOLEAN, false);
+        if (parameters[0] instanceof value_1.SimpValue) {
+            return new value_1.SimpValue(value_1.ValueType.BOOLEAN, parameters[0].value === parameters[1].value);
+        }
+        return new value_1.SimpValue(value_1.ValueType.BOOLEAN, parameters[0] === parameters[1]);
     });
     if (match.has(prim)) {
         return match.get(prim);

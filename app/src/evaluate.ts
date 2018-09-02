@@ -10,15 +10,16 @@ import {
     IfStmt,
     IntegerLiteral,
     Lambda,
+    Let,
+    Letrec,
     NilLiteral,
     PairLiteral,
     SetBang
 } from "./ast";
 import {Environment} from "./environment";
-import {ValueType} from "./value";
+import {Continuation, FuncValue, PairValue, SimpValue, Value, ValueType} from "./value";
 import {getPrimitives, isPrimitive} from "./constants";
 import {InteractContext, TestInteractContext} from "./interact";
-import {Continuation, FuncValue, PairValue, SimpValue, Value} from "./value";
 import {parse} from "./parse";
 import {tokenize} from "./tokenize";
 
@@ -29,11 +30,11 @@ export function evaluate(ast: AST, env: Environment, cont: (value: Value) => any
             // call with current continuation
             if (ast.func.name === "call/cc") {
                 if (ast.parameter.length !== 1) throw `call/cc only need one parameter`;
-                evaluate(ast.parameter[0], env, (fun: Value) => {
+                return evaluate(ast.parameter[0], env, (fun: Value) => {
                     if (fun instanceof FuncValue) {
-                        fun.evaluate([new Continuation(cont)], context, cont);
-                    } else if (fun   instanceof Continuation) {
-                        fun.cont(new Continuation(cont));
+                        return fun.apply([new Continuation(cont)], context, cont);
+                    } else if (fun instanceof Continuation) {
+                        return fun.cont(new Continuation(cont));
                     } else {
                         throw `Parameter of call/cc must be a function`;
                     }
@@ -46,53 +47,53 @@ export function evaluate(ast: AST, env: Environment, cont: (value: Value) => any
                     parameters.push(val);
                     if (i < ast.parameter.length - 1) {
                         i++;
-                        evaluate(ast.parameter[i], env, _cont, context);
+                        return evaluate(ast.parameter[i], env, _cont, context);
                     } else {
-                        cont(fun(parameters));
+                        return cont(fun(parameters));
                     }
                 };
                 if (ast.parameter.length > 0) {
-                    evaluate(ast.parameter[0], env, _cont, context);
+                    return evaluate(ast.parameter[0], env, _cont, context);
                 } else {
-                    cont(fun(parameters));
+                    return cont(fun(parameters));
                 }
             }
         } else {
-            evaluate(ast.func, env, (func: Value) => {
+            return evaluate(ast.func, env, (func: Value) => {
                 let parameters: Value[] = [];
                 let i = 0;
                 const _cont = (val) => {
                     parameters.push(val);
                     if (i < ast.parameter.length - 1) {
                         i++;
-                        evaluate(ast.parameter[i], env, _cont, context);
+                        return evaluate(ast.parameter[i], env, _cont, context);
                     } else {
                         if (func instanceof Continuation) {
                             if (parameters.length !== 1) {
                                 throw `Parameter numbers for continuation must be one`;
                             }
-                            func.cont(parameters[0]);
+                            return func.cont(parameters[0]);
                         } else {
                             if (func.type !== ValueType.FUNCTION) {
                                 throw `Func of Application is not a function`;
                             }
-                            (func as FuncValue).evaluate(parameters, context, cont);
+                            return (func as FuncValue).apply(parameters, context, cont);
                         }
                     }
                 };
                 if (ast.parameter.length > 0) {
-                    evaluate(ast.parameter[0], env, _cont, context);
+                    return evaluate(ast.parameter[0], env, _cont, context);
                 } else {
                     if (func instanceof Continuation) {
                         if (parameters.length !== 1) {
                             throw `Parameter numbers for continuation must be one`;
                         }
-                        func.cont(parameters[0]);
+                        return func.cont(parameters[0]);
                     } else {
                         if (func.type !== ValueType.FUNCTION) {
                             throw `Func of Application is not a function`;
                         }
-                        (func as FuncValue).evaluate([], context, cont);
+                        return (func as FuncValue).apply([], context, cont);
                     }
                 }
             }, context);
@@ -103,45 +104,77 @@ export function evaluate(ast: AST, env: Environment, cont: (value: Value) => any
         const _cont = (val) => {
             if (i < ast.stmts.length - 1) {
                 i++;
-                evaluate(ast.stmts[i], new_env, _cont, context);
+                return evaluate(ast.stmts[i], new_env, _cont, context);
             } else {
-                cont(val);
+                return cont(val);
             }
         };
-        evaluate(ast.stmts[i], new_env, _cont, context);
+        return evaluate(ast.stmts[i], new_env, _cont, context);
     } else if (ast instanceof Define) {
-        evaluate(ast.body, env, (body) => {
+        return evaluate(ast.body, env, (body) => {
             env.define(ast.identifer, body);
-            cont(context.VOID_VALUE);
+            return cont(context.VOID_VALUE);
         }, context);
     } else if (ast instanceof SetBang) {
-        evaluate(ast.body, env, (body) => {
+        return evaluate(ast.body, env, (body) => {
             env.modify(ast.identifer, body);
-            cont(context.VOID_VALUE);
+            return cont(context.VOID_VALUE);
         }, context);
     } else if (ast instanceof Lambda) {
-        cont(new FuncValue(env, ast.body, ast.parameters));
+        return cont(new FuncValue(env, ast.body, ast.parameters));
     } else if (ast instanceof IfStmt) {
-        evaluate(ast.cond, env, (cond) => {
+        return evaluate(ast.cond, env, (cond) => {
             if (cond.eq(true)) {
-                evaluate(ast.pass, env, cont, context);
+                return evaluate(ast.pass, env, cont, context);
             } else {
-                evaluate(ast.fail, env, cont, context);
+                return evaluate(ast.fail, env, cont, context);
             }
         }, context);
     } else if (ast instanceof CondStmt) {
         let i = 0;
         const _cont = (value: Value) => {
             if (value.eq(true)) {
-                evaluate(ast.cases[i][1], env, cont, context);
+                return evaluate(ast.cases[i][1], env, cont, context);
             } else if (i < ast.cases.length - 1) {
                 i++;
-                evaluate(ast.cases[i][0], env, _cont, context);
+                return evaluate(ast.cases[i][0], env, _cont, context);
             } else {
-                cont(context.VOID_VALUE);
+                return cont(context.VOID_VALUE);
             }
         };
-        evaluate(ast.cases[0][0], env, _cont, context);
+        return evaluate(ast.cases[0][0], env, _cont, context);
+    } else if (ast instanceof Let) {
+        if (ast.bindings.length === 0) {
+            return evaluate(ast.body, env, cont, context);
+        }
+        let i = 0;
+        const new_env = new Environment(env);
+        const cont_ = (value: Value) => {
+            new_env.define(ast.bindings[i][0], value);
+            if (i < ast.bindings.length - 1) {
+                i++;
+                return evaluate(ast.bindings[i][1], ast.star ? new_env : env, cont_, context);
+            } else {
+                return evaluate(ast.body, new_env, cont, context);
+            }
+        };
+        return evaluate(ast.bindings[i][1], new_env, cont_, context);
+    } else if (ast instanceof Letrec) {
+        const new_env = new Environment(env);
+        for (let i = 0; i < ast.bindings.length; i++) {
+            new_env.define(ast.bindings[i][0], new SimpValue(ValueType.VOID));
+        }
+        let i = 0;
+        const _cont = (value => {
+            new_env.modify(ast.bindings[i][0], value);
+            if (i < ast.bindings.length - 1){
+                i++;
+                return evaluate(ast.bindings[i][1], new_env, _cont, context);
+            } else {
+                return evaluate(ast.body, new_env, cont, context);
+            }
+        });
+        return evaluate(ast.bindings[i][1], new_env, _cont, context);
     } else if (ast instanceof Identifer) {
         cont(env.find(ast.name));
     } else if (ast instanceof IntegerLiteral) {

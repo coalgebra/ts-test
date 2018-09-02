@@ -5,13 +5,14 @@ const evaluate_1 = require("./evaluate");
 var ValueType;
 (function (ValueType) {
     ValueType[ValueType["FUNCTION"] = 0] = "FUNCTION";
-    ValueType[ValueType["BOOLEAN"] = 1] = "BOOLEAN";
-    ValueType[ValueType["INTEGER"] = 2] = "INTEGER";
-    ValueType[ValueType["CHARACTER"] = 3] = "CHARACTER";
-    ValueType[ValueType["PAIR"] = 4] = "PAIR";
-    ValueType[ValueType["NIL"] = 5] = "NIL";
-    ValueType[ValueType["VOID"] = 6] = "VOID";
-    ValueType[ValueType["CONTINUATION"] = 7] = "CONTINUATION";
+    ValueType[ValueType["SFUNCTION"] = 1] = "SFUNCTION";
+    ValueType[ValueType["BOOLEAN"] = 2] = "BOOLEAN";
+    ValueType[ValueType["INTEGER"] = 3] = "INTEGER";
+    ValueType[ValueType["CHARACTER"] = 4] = "CHARACTER";
+    ValueType[ValueType["PAIR"] = 5] = "PAIR";
+    ValueType[ValueType["NIL"] = 6] = "NIL";
+    ValueType[ValueType["VOID"] = 7] = "VOID";
+    ValueType[ValueType["CONTINUATION"] = 8] = "CONTINUATION";
 })(ValueType = exports.ValueType || (exports.ValueType = {}));
 class Value {
     constructor(type) {
@@ -53,8 +54,10 @@ class PairValue extends Value {
     print() {
         if (this.cdr.type === ValueType.NIL)
             return `(${this.car.print()})`;
-        if (this.cdr.type === ValueType.PAIR)
-            return `(${this.car.print()} ${this.cdr.print()})`;
+        if (this.cdr.type === ValueType.PAIR) {
+            let res = this.cdr.print();
+            return `(${this.car.print()} ${res.slice(1, res.length - 1)})`;
+        }
         return `(${this.car.print()} . ${this.cdr.print()})`;
     }
 }
@@ -72,7 +75,7 @@ class FuncValue extends Value {
     eq(val) {
         return false;
     }
-    evaluate(parameters, context, cont) {
+    apply(parameters, context, cont) {
         if (parameters.length !== this.paramNames.length) {
             throw `Parameter number dismatch`;
         }
@@ -87,6 +90,23 @@ class FuncValue extends Value {
     }
 }
 exports.FuncValue = FuncValue;
+class SFunction extends Value {
+    constructor(body, paramNames) {
+        super(ValueType.SFUNCTION);
+        this.body = body;
+        this.paramNames = paramNames;
+    }
+    is(cond) {
+        return cond === ValueType.SFUNCTION;
+    }
+    eq(val) {
+        return false;
+    }
+    print() {
+        return "#<procedure>";
+    }
+}
+exports.SFunction = SFunction;
 class Continuation extends Value {
     constructor(cont) {
         super(ValueType.CONTINUATION);

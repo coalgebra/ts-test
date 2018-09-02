@@ -15,7 +15,7 @@ class CodePosition {
         return this.column >= 0 && this.line >= 0;
     }
     toString() {
-        return `${this.filename}:${this.line}:${this.column}`;
+        return `${this.filename}:${this.line + 1}:${this.column + 1}`;
     }
 }
 exports.CodePosition = CodePosition;
@@ -28,14 +28,14 @@ var Parentheses;
 })(Parentheses = exports.Parentheses || (exports.Parentheses = {}));
 var TokenType;
 (function (TokenType) {
-    TokenType[TokenType["IDENTIFIER"] = 1] = "IDENTIFIER";
-    TokenType[TokenType["PARENTHESE"] = 2] = "PARENTHESE";
-    TokenType[TokenType["CHAR_LITERAL"] = 3] = "CHAR_LITERAL";
-    TokenType[TokenType["INTEGER_LITERAL"] = 4] = "INTEGER_LITERAL";
-    TokenType[TokenType["BOOLEAN_LITERAL"] = 5] = "BOOLEAN_LITERAL";
-    TokenType[TokenType["STRING_LITERAL"] = 6] = "STRING_LITERAL";
-    TokenType[TokenType["QUOTE"] = 7] = "QUOTE";
-    TokenType[TokenType["VOID"] = 8] = "VOID";
+    TokenType["IDENTIFIER"] = "ID";
+    TokenType["PARENTHESE"] = "PARENTHESE";
+    TokenType["CHAR_LITERAL"] = "CHAR";
+    TokenType["INTEGER_LITERAL"] = "INTEGER";
+    TokenType["BOOLEAN_LITERAL"] = "BOOLEAN";
+    TokenType["STRING_LITERAL"] = "STRING";
+    TokenType["QUOTE"] = "QUOTE";
+    TokenType["VOID"] = "VOID";
 })(TokenType = exports.TokenType || (exports.TokenType = {}));
 class Token {
     constructor(begin, end, content, token_type, value) {
@@ -186,7 +186,7 @@ function tokenize(code, filename) {
             comment_counter || tokens.push(new Token(begin, begin, head, TokenType.QUOTE, head));
             continue;
         }
-        if ("0123456789-".includes(head)) { // number
+        if ("0123456789".includes(head)) { // number
             while (position.fine() && !isSpace(cur()) && !("[()]".includes(cur())))
                 step();
             let num = code.substr(begin.offset, position.offset - begin.offset);

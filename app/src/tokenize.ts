@@ -23,7 +23,7 @@ export class CodePosition {
     }
 
     toString(): string {
-        return `${this.filename}:${this.line}:${this.column}`;
+        return `${this.filename}:${this.line + 1}:${this.column + 1}`;
     }
 }
 
@@ -35,14 +35,14 @@ export enum Parentheses {
 }
 
 export enum TokenType {
-    IDENTIFIER = 1,
-    PARENTHESE = 2,
-    CHAR_LITERAL = 3,
-    INTEGER_LITERAL = 4,
-    BOOLEAN_LITERAL = 5,
-    STRING_LITERAL = 6, // TODO
-    QUOTE = 7, // TODO,
-    VOID = 8,
+    IDENTIFIER = "ID",
+    PARENTHESE = "PARENTHESE",
+    CHAR_LITERAL = "CHAR",
+    INTEGER_LITERAL = "INTEGER",
+    BOOLEAN_LITERAL = "BOOLEAN",
+    STRING_LITERAL = "STRING", // TODO
+    QUOTE = "QUOTE",
+    VOID = "VOID",
 }
 
 export class Token {
@@ -205,7 +205,7 @@ export function tokenize(code: string, filename?: string): Token[] {
             continue;
         }
 
-        if ("0123456789-".includes(head)) { // number
+        if ("0123456789".includes(head)) { // number
             while (position.fine() && !isSpace(cur()) && !("[()]".includes(cur()))) step();
             let num = code.substr(begin.offset, position.offset - begin.offset);
             if (comment_counter) continue;
