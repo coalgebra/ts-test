@@ -5,15 +5,15 @@ import {evaluate} from "./evaluate";
 import {SAST} from "./SAST";
 
 export enum ValueType {
-    FUNCTION,
-    SFUNCTION,
-    BOOLEAN,
-    INTEGER,
-    CHARACTER, // TODO
-    PAIR,
-    NIL, // ()
-    VOID,
-    CONTINUATION, // dirty hack
+    FUNCTION = "vfunction",
+    SFUNCTION = "vfunction",
+    BOOLEAN = "vboolean",
+    INTEGER = "vinteger",
+    CHARACTER = "vchar", // TODO
+    PAIR = "vpair",
+    NIL = "vnil", // ()
+    VOID = "vvoid",
+    CONTINUATION = "vcont", // dirty hack
 }
 
 export abstract class Value {

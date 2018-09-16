@@ -4,15 +4,15 @@ const environment_1 = require("./environment");
 const evaluate_1 = require("./evaluate");
 var ValueType;
 (function (ValueType) {
-    ValueType[ValueType["FUNCTION"] = 0] = "FUNCTION";
-    ValueType[ValueType["SFUNCTION"] = 1] = "SFUNCTION";
-    ValueType[ValueType["BOOLEAN"] = 2] = "BOOLEAN";
-    ValueType[ValueType["INTEGER"] = 3] = "INTEGER";
-    ValueType[ValueType["CHARACTER"] = 4] = "CHARACTER";
-    ValueType[ValueType["PAIR"] = 5] = "PAIR";
-    ValueType[ValueType["NIL"] = 6] = "NIL";
-    ValueType[ValueType["VOID"] = 7] = "VOID";
-    ValueType[ValueType["CONTINUATION"] = 8] = "CONTINUATION";
+    ValueType["FUNCTION"] = "vfunction";
+    ValueType["SFUNCTION"] = "vfunction";
+    ValueType["BOOLEAN"] = "vboolean";
+    ValueType["INTEGER"] = "vinteger";
+    ValueType["CHARACTER"] = "vchar";
+    ValueType["PAIR"] = "vpair";
+    ValueType["NIL"] = "vnil";
+    ValueType["VOID"] = "vvoid";
+    ValueType["CONTINUATION"] = "vcont";
 })(ValueType = exports.ValueType || (exports.ValueType = {}));
 class Value {
     constructor(type) {

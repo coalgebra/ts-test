@@ -47,9 +47,12 @@ export function desugar(ast: AST): SAST {
     } else if (ast instanceof IfStmt) {
         return new SIf(desugar(ast.cond), desugar(ast.pass), desugar(ast.fail));
     } else if (ast instanceof CondStmt) {
-        let core = new SIf(desugar(ast.cases[ast.cases.length - 1][0]),
+        let core : SAST = new SIf(desugar(ast.cases[ast.cases.length - 1][0]),
             desugar(ast.cases[ast.cases.length - 1][1]),
             new SLiteral(new SimpValue(ValueType.VOID)));
+        if (ast.cases[ast.cases.length - 1][0].print() === "#t") {
+            core = desugar(ast.cases[ast.cases.length - 1][1]);
+        }
         for (let i = ast.cases.length - 2; i >= 0; i--) {
             core = new SIf(desugar(ast.cases[i][0]),
                 desugar(ast.cases[i][1]),

@@ -38,6 +38,9 @@ function desugar(ast) {
     }
     else if (ast instanceof ast_1.CondStmt) {
         let core = new SAST_1.SIf(desugar(ast.cases[ast.cases.length - 1][0]), desugar(ast.cases[ast.cases.length - 1][1]), new SAST_1.SLiteral(new value_1.SimpValue(value_1.ValueType.VOID)));
+        if (ast.cases[ast.cases.length - 1][0].print() === "#t") {
+            core = desugar(ast.cases[ast.cases.length - 1][1]);
+        }
         for (let i = ast.cases.length - 2; i >= 0; i--) {
             core = new SAST_1.SIf(desugar(ast.cases[i][0]), desugar(ast.cases[i][1]), core);
         }
